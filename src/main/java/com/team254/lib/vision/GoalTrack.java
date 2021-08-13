@@ -1,8 +1,6 @@
 package com.team254.lib.vision;
 
 import com.team1678.frc2021.Constants;
-import com.team254.lib.geometry.Pose2d;
-import com.team254.lib.geometry.Rotation2d;
 import com.team2910.lib.math.RigidTransform2;
 import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.math.Vector2;

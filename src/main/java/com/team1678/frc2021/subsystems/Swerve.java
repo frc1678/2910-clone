@@ -1,6 +1,5 @@
 package com.team1678.frc2021.subsystems;
 
-import java.nio.file.LinkPermission;
 import java.util.Optional;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -13,7 +12,6 @@ import com.team1323.lib.util.Logger;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
@@ -22,7 +20,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import com.team1678.frc2021.Constants;
-import com.team1678.frc2021.subsystems.SwerveDriveModule;
 import com.team254.lib.util.ReflectingCSVWriter;
 import com.team1678.frc2021.Ports;
 import com.team2910.lib.control.HolonomicMotionProfiledTrajectoryFollower;
@@ -39,7 +36,6 @@ import com.team2910.lib.robot.Gyroscope;
 import com.team2910.lib.robot.UpdateManager;
 import com.team2910.lib.robot.Pigeon.Axis;
 import com.team2910.lib.robot.Pigeon;
-import com.team2910.lib.robot.SwerveModule;
 import com.team2910.lib.util.DrivetrainFeedforwardConstants;
 import com.team2910.lib.util.HolonomicDriveSignal;
 import com.team2910.lib.util.HolonomicFeedforward;

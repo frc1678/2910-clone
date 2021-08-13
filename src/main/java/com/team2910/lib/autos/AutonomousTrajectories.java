@@ -1,24 +1,12 @@
 package com.team2910.lib.autos;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import com.team1678.frc2021.DriveMotionPlanner;
 import com.team2910.lib.control.*;
 import com.team2910.lib.math.RigidTransform2;
 import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.math.Vector2;
-import com.team2910.lib.math.spline.CubicHermiteSpline;
-import com.team2910.lib.math.spline.Spline;
-import com.team2910.lib.util.InterpolatingDouble;
-import com.team2910.lib.util.InterpolatingTreeMap;
-import com.team2910.lib.util.Side;
-
-import edu.wpi.first.wpilibj.Timer;
 
 public class AutonomousTrajectories {
 

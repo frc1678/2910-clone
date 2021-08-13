@@ -2,7 +2,6 @@ package com.team2910.lib.robot;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.team1678.frc2021.Ports;
-import com.team2910.lib.robot.Gyroscope;
 import com.team2910.lib.math.Rotation2;
 
 public class Pigeon extends Gyroscope {

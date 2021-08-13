@@ -1,27 +1,10 @@
 package com.team1678.frc2021.auto.modes;
 
-import java.util.Arrays;
 import java.util.List;
 
-import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.auto.AutoModeBase;
 import com.team1678.frc2021.auto.AutoModeEndedException;
-//import com.team1678.frc2021.auto.actions.RemainingProgressAction;
 import com.team1678.frc2021.auto.actions.ResetPoseAction;
-import com.team1678.frc2021.auto.actions.SetTrajectoryAction;
-import com.team1678.frc2021.auto.actions.WaitAction;
-import com.team1678.frc2021.auto.actions.WaitForDistanceAction;
-import com.team1678.frc2021.auto.actions.WaitForHeadingAction;
-import com.team1678.frc2021.auto.actions.WaitToFinishPathAction;
-import com.team1678.frc2021.auto.actions.WaitToPassXCoordinateAction;
-import com.team1678.frc2021.auto.actions.WaitToPassYCoordinateAction;
-import com.team1678.frc2021.loops.LimelightProcessor;
-import com.team1678.frc2021.loops.LimelightProcessor.Pipeline;
-
-import com.team1678.frc2021.subsystems.Swerve;
-import com.team1678.frc2021.*;
-
-import com.team2910.lib.autos.*;
 import com.team2910.lib.control.Trajectory;
 
 import edu.wpi.first.wpilibj.Timer;

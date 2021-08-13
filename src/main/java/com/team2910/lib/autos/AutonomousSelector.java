@@ -3,14 +3,10 @@ package com.team2910.lib.autos;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.team1678.frc2021.auto.modes.StandStillMode;
 import com.team1678.frc2021.subsystems.Swerve;
 import com.team2910.lib.commands.FollowTrajectoryCommand;
 import com.team2910.lib.math.Rotation2;
-import com.team2910.lib.util.Side;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -23,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 public class AutonomousSelector {
     private final AutonomousTrajectories trajectories;
 
-    private static SendableChooser<Side> sideChooser;
     private static SendableChooser<Rotation2> orientationChooser;
     private static SendableChooser<AutonomousMode> autonomousModeChooser;
     //private static NetworkTableEntry testPath;
