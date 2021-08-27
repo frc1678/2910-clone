@@ -27,15 +27,83 @@ public class Indexer extends Subsystem {
     private static Indexer mInstance = null;
     private IndexerMotionPlanner mMotionPlanner;
 
+    private PeriodicIO mPeriodicIO = new PeriodicIO();
+
+    private DigitalInput mSlot0Proxy = new DigitalInput(Constants.kSlot0Proxy);
+    private DigitalInput mSlot1Proxy = new DigitalInput(Constants.kSlot1Proxy);
+    private DigitalInput mSlot2Proxy = new DigitalInput(Constants.kSlot2Proxy);
+    private DigitalInput mSlot3Proxy = new DigitalInput(Constants.kSlot3Proxy);
+    private DigitalInput mSlot4Proxy = new DigitalInput(Constants.kSlot4Proxy);
+
+
     public enum WantedAction {
-        NONE, INDEX, PASSIVE_INDEX, PREP, REVOLVE, ZOOM, SLOW_ZOOM, HELLA_ZOOM,
+        NONE, INDEX, REVERSE_INDEX, PREP, ZOOM, SLOW_ZOOM, HELLA_ZOOM, BARF,
     }
 
     public enum State {
-        IDLE, INDEXING, PASSIVE_INDEXING, PREPPING, REVOLVING, ZOOMING, SLOW_ZOOMING, FEEDING, HELLA_ZOOMING,
+        IDLE, INDEXING, REVERSE_INDEXING, PREPPING, ZOOMING, SLOW_ZOOMING, HELLA_ZOOMING, BARFING,
     }
 
+    private final TalonFX mMaster;
+    private State mState = State.IDLE;
+    private double mInitialTime = 0;
+    private boolean mStartCounting = false;
+    private boolean mBackwards = false;
+
+
     private Indexer() {
+        mMaster = TalonFXFactory.createDefaultTalon(Constants.kIndexerId);
+    }
+
+    public void runStateMachine() {
+        final double now = Timer.getFPGATimestamp();
+
+        switch (mState) {
+            case IDLE:
+                break;
+            case INDEXING:
+                break;
+            case REVERSE_INDEXING:
+                break;
+            case PREPPING:
+                break;
+            case ZOOMING:
+                break;
+            case SLOW_ZOOMING:
+                break;
+            case HELLA_ZOOMING:
+                break;
+            case BARFING:
+                break;
+            default:
+                System.out.println("Fell through on Indexer states!");
+        }
+    }
+
+    @Override
+    public void outputTelemetry() {
+
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public boolean checkSystem() {
+        return true;
+    }
+
+    @Override
+    public synchronized void readPeriodicInputs() {
+        mPeriodicIO.timestamp = Timer.getFPGATimestamp();
+        mPeriodicIO.raw_slots[0] = mSlot0Proxy.get();
+        mPeriodicIO.raw_slots[1] = mSlot1Proxy.get();
+        mPeriodicIO.raw_slots[2] = mSlot2Proxy.get();
+        mPeriodicIO.raw_slots[3] = mSlot3Proxy.get();
+        mPeriodicIO.raw_slots[4] = mSlot4Proxy.get();
+        mPeriodicIO.indexer_current = mMaster.getStatorCurrent();
     }
 
     public static class PeriodicIO {
