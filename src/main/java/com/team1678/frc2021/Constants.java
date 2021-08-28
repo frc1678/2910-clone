@@ -72,7 +72,9 @@ public class Constants {
 	 public static final int kAnglePerSlot = 360 / kIndexerSlots;
 	 public static final double kIndexerDeadband = 2.0; // degrees
 
-	 public static final int kIndexerId = 7; 
+	 public static final int kIndexerId = 7;
+
+	 public static final double kZoomingVelocity = 80.;
 
 	// shooter
 	public static final int kMasterFlywheelID = 14;
