@@ -313,6 +313,10 @@ public class Indexer extends Subsystem {
         mMaster.setSelectedSensorPosition(0, 0, 10);
     }
 
+    /**
+     * Registers the enabled loops
+     * @param enabledLooper the enabled ILooper
+     */
     @Override
     public void registerEnabledLoops(ILooper enabledLooper) {
         enabledLooper.register(new Loop() {
