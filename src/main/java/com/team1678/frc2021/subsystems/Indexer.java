@@ -33,23 +33,25 @@ public class Indexer extends Subsystem {
     // Slot state arrays
     private boolean[] mCleanSlots = { false, false, false, false, false };
 
-    private static final boolean[] kFullSlots = {true, true, true, true, true };
-    private static final boolean[] kEmptySlots = {false, false, false, false, false };
 
     // Declare States and Wanted Actions
     public enum WantedAction {
-        NONE, INDEX, UNJAM, PREP, ZOOM, SLOW_ZOOM, HELLA_ZOOM, BARF,
+        NONE, INDEX, UNJAM, PREP, FEED, SLOW_ZOOM, HELLA_ZOOM, BARF,
     }
 
     public enum State {
-        IDLE, INDEXING, UNJAMMING, PREPPING, ZOOMING, SLOW_ZOOMING, HELLA_ZOOMING, BARFING,
+        IDLE, INDEXING, UNJAMMING, PREPPING, FEEDING, SLOW_ZOOMING, HELLA_ZOOMING, BARFING,
     }
 
     private int mSlotGoal;
     private final TalonFX mMaster;
     private State mState = State.IDLE;
+
+    private double mWaitTime = .1;   // seconds
     private double mInitialTime = 0;
     private double mOffset = 0;
+
+    private boolean mGeneratedGoal = false;
     private boolean mStartCounting = false;
     private boolean mBackwards = false;
 
@@ -99,21 +101,7 @@ public class Indexer extends Subsystem {
                 break;
             case INDEXING:
                 mPeriodicIO.indexer_control_mode = ControlMode.MotionMagic;
-
-                if (!mGeneratedGoal) {
-                    mSlotGoal = mMotionPlanner.findNearestOpenSlot(indexer_angle);
-                    mGeneratedGoal = true;
-                }
-                mPeriodicIO.indexer_demand = mMotionPlanner.findAngleGoal(mSlotGoal, indexer_angle, 0);
-
-                if (mMotionPlanner.isAtGoal(mSlotGoal, indexer_angle, 0)) {
-                    if (mCleanSlots[mSlotGoal]) {
-                        mGeneratedGoal = false;
-                        // mSlotGoal = mMotionPlanner.findNearestOpenSlot(indexer_angle, mProxyStatus);
-                        // mPeriodicIO.indexer_demand = mMotionPlanner.findAngleGoalToIntake(mSlotGoal,
-                        // indexer_angle);
-                    }
-                }
+                mPeriodicIO.indexer_demand = mMotionPlanner.findIntakingDistance(slotsFilled());
                 break;
             case UNJAMMING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
@@ -121,12 +109,20 @@ public class Indexer extends Subsystem {
                 break;
             case PREPPING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
-                mPeriodicIO.indexer_demand = 0;
+                if (slotsEmpty()) { mPeriodicIO.indexer_demand = Constants.kZoomingVelocity; }
                 break;
-                break;
-            case ZOOMING:
-                mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
-                mPeriodicIO.indexer_demand = mBackwards ? -Constants.kZoomingVelocity : Constants.kZoomingVelocity;
+            case FEEDING:
+                mPeriodicIO.indexer_control_mode = ControlMode.MotionMagic;
+                if (mMotionPlanner.isAtGoal(mCleanSlots)) {
+                    if (!mStartCounting) {
+                        mInitialTime = now;
+                        mStartCounting = true;
+                    }
+                    if (mStartCounting && now - mInitialTime > mWaitTime) {
+                        mStartCounting = false;
+                    }
+                }
+                mPeriodicIO.indexer_demand = IndexerMotionPlanner.findDistanceGoal(findNearestFilledSlot());
                 break;
             case SLOW_ZOOMING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
@@ -151,6 +147,7 @@ public class Indexer extends Subsystem {
      */
     public void setState(WantedAction wanted_state) {
         final State prev_state = mState;
+
         switch (wanted_state) {
             case NONE:
                 mState = State.IDLE;
@@ -164,8 +161,8 @@ public class Indexer extends Subsystem {
             case PREP:
                 mState = State.PREPPING;
                 break;
-            case ZOOM:
-                mState = State.ZOOMING;
+            case FEED:
+                mState = State.FEEDING;
                 break;
             case SLOW_ZOOM:
                 mState = State.SLOW_ZOOMING;
@@ -178,16 +175,20 @@ public class Indexer extends Subsystem {
                 break;
         }
 
-        if (mState != prev_state && mState != State.BARFING && mState != State.INDEXING) {
-            mSlotGoal = mMotionPlanner.findNearestSlot(mPeriodicIO.indexer_angle, mTurret.getAngle());
-        }
-
+        // Unjam the indexer
         if (mState != prev_state && mState == State.UNJAMMING) {
             mIndexerStart = Timer.getFPGATimestamp();
             mBackwards = true;
         }
 
-        if (mState != prev_state && mState == State.ZOOMING) {
+        // Reverse complete
+        if (mState != prev_state && prev_state == State.UNJAMMING && mState != State.BARFING) {
+            mIndexerStart = Timer.getFPGATimestamp();
+            mBackwards = false;
+        }
+
+        // Zooming ramping up
+        if (mState != prev_state && mState == State.FEEDING) {
             mMaster.configClosedloopRamp(0.2, 0);
         } else if (mState != prev_state) {
             mMaster.configClosedloopRamp(0.0, 0);
@@ -199,15 +200,21 @@ public class Indexer extends Subsystem {
      * @return Indexer velocity
      */
     public double getIndexerVelocity() {
+        double rValue = 0;
         try {
-            if (mPeriodicIO.indexer_control_mode == ControlMode.Velocity) {
-                return mPeriodicIO.indexer_demand;
-            } else {
-                return 0;
-            }
+            if (mPeriodicIO.indexer_control_mode == ControlMode.Velocity) { rValue = mPeriodicIO.indexer_demand; }
         } catch (ReadPendingException readError) {
             System.out.println("Unable to read Indexer Velocity");
         }
+        return rValue;
+    }
+
+    public int findNearestFilledSlot() {
+        int rValue = 0;
+        for (int i = 0; i < 4; i++) {
+            if (mCleanSlots[i]) { rValue = i; }
+        }
+        return rValue;
     }
 
     /**
@@ -215,7 +222,7 @@ public class Indexer extends Subsystem {
      * @return Are the slots filled
      */
     public synchronized boolean slotsFilled() {
-        return Arrays.equals(mCleanSlots, kFullSlots);
+        return Arrays.equals(mCleanSlots, Constants.kFullSlots);
     }
 
     /**
@@ -223,7 +230,7 @@ public class Indexer extends Subsystem {
      * @return Are the slots empty
      */
     public synchronized boolean slotsEmpty() {
-        return Arrays.equals(mCleanSlots, kEmptySlots);
+        return Arrays.equals(mCleanSlots, Constants.kEmptySlots);
     }
 
     /**
@@ -267,7 +274,7 @@ public class Indexer extends Subsystem {
      * @param indexer_angle Angle of the indexer
      */
     private void updateSlots(double indexer_angle) {
-        mCleanSlots = mMotionPlanner.updateSlotStatus(indexer_angle, mPeriodicIO.raw_slots);
+        mCleanSlots = mMotionPlanner.updateSlotStatus(mPeriodicIO.raw_slots);
     }
 
     /**
@@ -310,7 +317,7 @@ public class Indexer extends Subsystem {
     @Override
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
-        mPeriodicIO.raw_slots[0] = mSlot0Proxy.get();
+        mPeriodicIO.raw_slots[0] = mSlot0Proxy.get();  // Slot closest to the shooter
         mPeriodicIO.raw_slots[1] = mSlot1Proxy.get();
         mPeriodicIO.raw_slots[2] = mSlot2Proxy.get();
         mPeriodicIO.raw_slots[3] = mSlot3Proxy.get();

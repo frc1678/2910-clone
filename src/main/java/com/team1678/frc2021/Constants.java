@@ -69,12 +69,16 @@ public class Constants {
 	 public static final int kIndexerMaxAcceleration = 40000; // ticks / 100ms / sec
  
 	 public static final int kIndexerSlots = 5;
-	 public static final int kAnglePerSlot = 360 / kIndexerSlots;
+	 public static final int kDistancePerSlot = 360 / kIndexerSlots;		// TODO Find Actual Distance
+	 public static final int kTotalDistance = 5000;                         // TODO Find Actual Distance
 	 public static final double kIndexerDeadband = 2.0; // degrees
 
 	 public static final int kIndexerId = 7;
 
 	 public static final double kZoomingVelocity = 80.;
+
+	 public static final boolean[] kFullSlots = {true, true, true, true, true };
+	 public static final boolean[] kEmptySlots = {false, false, false, false, false };
 
 	// shooter
 	public static final int kMasterFlywheelID = 14;
