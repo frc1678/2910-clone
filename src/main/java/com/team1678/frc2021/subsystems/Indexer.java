@@ -8,6 +8,8 @@ import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.team1678.frc2021.Constants;
 
+import com.team1678.frc2021.loops.ILooper;
+import com.team1678.frc2021.loops.Loop;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team1678.frc2021.planners.IndexerMotionPlanner;
 
@@ -309,6 +311,28 @@ public class Indexer extends Subsystem {
     @Override
     public void zeroSensors() {
         mMaster.setSelectedSensorPosition(0, 0, 10);
+    }
+
+    @Override
+    public void registerEnabledLoops(ILooper enabledLooper) {
+        enabledLooper.register(new Loop() {
+            @Override
+            public void onStart(double timestamp) {
+                mState = State.IDLE;
+            }
+
+            @Override
+            public void onLoop(double timestamp) {
+                synchronized (Indexer.this) {
+                    runStateMachine();
+                }
+            }
+
+            @Override
+            public void onStop(double timestamp) {
+                mState = State.IDLE;
+            }
+        });
     }
 
     /**
