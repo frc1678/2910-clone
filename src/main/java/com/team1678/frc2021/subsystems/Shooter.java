@@ -72,6 +72,17 @@ public class Shooter extends Subsystem {
     }
 
     @Override
+    public synchronized void outputTelemetry() {
+        SmartDashboard.putNumber("Flywheel Velocity", mPeriodicIO.flywheel_velocity);
+        SmartDashboard.putNumber("Flywheel Current", mPeriodicIO.flywheel_current);
+        SmartDashboard.putNumber("Flywheel Goal", mPeriodicIO.flywheel_demand);
+        SmartDashboard.putNumber("Flywheel Temperature", mPeriodicIO.flywheel_temperature);
+        if (mCSVWriter != null) {
+            mCSVWriter.write();
+        }
+    }
+    
+    @Override
     public void stop() {
         setOpenLoop(0);
     }
