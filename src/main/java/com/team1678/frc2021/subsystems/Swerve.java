@@ -316,8 +316,15 @@ public class Swerve implements Subsystem, UpdateManager.Updatable {
     }
 
     private void updateModules(double time, double dt) {
-        Optional<HolonomicDriveSignal> optSignal = follower.update(getPose(), currentVelocity.getTranslationalVelocity(),
-            currentVelocity.getAngularVelocity(), time, dt);
+        updateOdometry(dt);
+
+        Optional<HolonomicDriveSignal> optSignal = follower.update(
+            getPose(), 
+            currentVelocity.getTranslationalVelocity(),
+            currentVelocity.getAngularVelocity(), 
+            time, 
+            dt);
+
         HolonomicDriveSignal localSignal;
 
         if (optSignal.isPresent()) {
@@ -327,7 +334,6 @@ public class Swerve implements Subsystem, UpdateManager.Updatable {
         } else {
             localSignal = this.driveSignal;
         }
-
 
         ChassisVelocity chassisVelocity;
         Boolean drive = true;
@@ -356,8 +362,7 @@ public class Swerve implements Subsystem, UpdateManager.Updatable {
             module.updateState(dt);
         }
 
-        currentVelocity = chassisVelocity;
-    }
+        currentVelocity = chassisVelocity;    }
 
     @Override
     public void update(double time, double dt) {
