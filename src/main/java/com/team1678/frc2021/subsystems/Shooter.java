@@ -56,7 +56,7 @@ public class Shooter extends Subsystem {
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 40, 100, 0.02);
         mMaster.configSupplyCurrentLimit(curr_lim);
 
-        mSlave.setInverted(false);
+        mSlave.setInverted(true);
 
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
@@ -69,17 +69,6 @@ public class Shooter extends Subsystem {
             mInstance = new Shooter();
         }
         return mInstance;
-    }
-
-    @Override
-    public synchronized void outputTelemetry() {
-        SmartDashboard.putNumber("Flywheel Velocity", mPeriodicIO.flywheel_velocity);
-        SmartDashboard.putNumber("Flywheel Current", mPeriodicIO.flywheel_current);
-        SmartDashboard.putNumber("Flywheel Goal", mPeriodicIO.flywheel_demand);
-        SmartDashboard.putNumber("Flywheel Temperature", mPeriodicIO.flywheel_temperature);
-        if (mCSVWriter != null) {
-            mCSVWriter.write();
-        }
     }
     
     @Override
@@ -96,14 +85,14 @@ public class Shooter extends Subsystem {
         enabledLooper.register(new Loop() {
             @Override
             public void onStart(double timestamp) {
-                startLogging();
+                //startLogging();
             }
             @Override
             public void onLoop(double timestamp) {
             }
             @Override
             public void onStop(double timestamp) {
-                stopLogging();
+                //stopLogging();
             }
         });
     }
@@ -158,7 +147,18 @@ public class Shooter extends Subsystem {
             mMaster.set(ControlMode.PercentOutput, 0);
         }
     }
-
+    
+    @Override
+    public synchronized void outputTelemetry() {
+        SmartDashboard.putNumber("Flywheel Velocity", mPeriodicIO.flywheel_velocity);
+        SmartDashboard.putNumber("Flywheel Current", mPeriodicIO.flywheel_current);
+        SmartDashboard.putNumber("Flywheel Goal", mPeriodicIO.flywheel_demand);
+        SmartDashboard.putNumber("Flywheel Temperature", mPeriodicIO.flywheel_temperature);
+        if (mCSVWriter != null) {
+            mCSVWriter.write();
+        }
+    }
+    
     @Override
     public synchronized boolean checkSystem() {
         return true;
