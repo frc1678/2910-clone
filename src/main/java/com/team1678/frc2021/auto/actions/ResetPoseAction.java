@@ -2,7 +2,6 @@ package com.team1678.frc2021.auto.actions;
 
 import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.subsystems.Swerve;
-import com.team254.lib.geometry.Pose2d;
 import com.team2910.lib.math.RigidTransform2;
 
 public class ResetPoseAction extends RunOnceAction{

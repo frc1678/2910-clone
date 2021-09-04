@@ -6,8 +6,6 @@ import java.util.Objects;
 
 import com.team2910.lib.util.Interpolable;
 
-import edu.wpi.first.wpiutil.math.Vector;
-
 
 /**
  * A vector representing a point in 2d space.

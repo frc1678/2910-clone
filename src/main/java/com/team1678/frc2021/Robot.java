@@ -7,7 +7,13 @@
 
 package com.team1678.frc2021;
 
+import com.team1323.io.Xbox;
+import com.team1678.frc2021.subsystems.Swerve;
+import com.team2910.lib.robot.UpdateManager;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -17,28 +23,30 @@ import edu.wpi.first.wpilibj.TimedRobot;
  * project.
  */
 public class Robot extends TimedRobot {
-  /**
-   * This function is run when the robot is first started up and should be used
-   * for any initialization code.
-   */
+	private RobotContainer robotContainer;
+  private UpdateManager updateManager;
+  private Swerve swerve;
+  private Xbox operator;
+  private DriverStation ds;
+
   @Override
   public void robotInit() {
+      swerve = Swerve.getInstance();
+      robotContainer = new RobotContainer();
+      updateManager = new UpdateManager(
+              robotContainer.getDrivetrainSubsystem()
+      );
+      updateManager.startLoop(5.0e-3);
+  }
+
+  @Override
+  public void robotPeriodic() {
+      CommandScheduler.getInstance().run();
   }
 
   @Override
   public void autonomousInit() {
-  }
-
-  @Override
-  public void autonomousPeriodic() {
-  }
-
-  @Override
-  public void teleopInit() {
-  }
-
-  @Override
-  public void teleopPeriodic() {
+    robotContainer.getAutonomousCommand().schedule();
   }
 
   @Override
@@ -47,6 +55,14 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
+  }
+
+  @Override
+  public void disabledPeriodic() {
+  }
+
+  @Override
+  public void teleopInit() {
   }
 
 }
