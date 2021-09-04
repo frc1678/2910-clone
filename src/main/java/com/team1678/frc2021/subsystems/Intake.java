@@ -42,11 +42,14 @@ public class Intake extends Subsystem {
     private final TalonFX mMaster;
     private final TalonFX mSlave;
 
+    private final TalonFX mBar;
+    
 
     private Intake() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterIntakeRollerId);
         mDeploySolenoid = Constants.makeSolenoidForId(Constants.kDeploySolenoidId);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaverIntakeRollerId, Constants.kMasterIntakeRollerId);
+        mBar = TalonFXFactory.
         mSlave.setInverted(true);
     }
 
