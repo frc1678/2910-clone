@@ -39,6 +39,7 @@ public class Shooter extends Subsystem {
 
     private Shooter() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
+        mMaster1 = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
 
         mMaster.set(ControlMode.PercentOutput, 0);
@@ -56,7 +57,8 @@ public class Shooter extends Subsystem {
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 40, 100, 0.02);
         mMaster.configSupplyCurrentLimit(curr_lim);
 
-        mSlave.setInverted(false);
+        mSlave.setInverted(true);
+        mMaster1.setInverted(true);
 
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
