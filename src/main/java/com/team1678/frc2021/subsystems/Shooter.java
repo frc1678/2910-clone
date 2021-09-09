@@ -58,7 +58,18 @@ public class Shooter extends Subsystem {
         mMaster.configSupplyCurrentLimit(curr_lim);
 
         mSlave.setInverted(true);
-        mMaster1.setInverted(true);
+        
+        mMaster1.set(ControlMode.PercentOutput, 0);
+        mMaster1.setInverted(false);
+        mMaster1.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
+        mMaster1.enableVoltageCompensation(true);
+
+        mMaster1.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
+        mMaster1.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
+        mMaster1.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
+        mMaster1.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
+        mMaster1.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
+        mMaster1.selectProfileSlot(0, 0);
 
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
