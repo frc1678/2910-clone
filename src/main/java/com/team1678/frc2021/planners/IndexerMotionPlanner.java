@@ -3,14 +3,19 @@ package com.team1678.frc2021.planners;
 import com.team1678.frc2021.Constants;
 
 public class IndexerMotionPlanner {
-    private boolean[] slots = {false, false, false, false, false};
+    private boolean[] slots = {false, false, false};
 
     public IndexerMotionPlanner() {
         throw new UnsupportedOperationException("Unsupported Orientation");
     }
 
-    public double findDistanceToIntake(int slotNumber) {
-        return Constants.kTotalDistance - (slotNumber * Constants.kDistancePerSlot);
+    public double findDistanceGoal(int slotNumber) {
+        return slotNumber * Constants.kDistancePerSlot;
+    }
+
+    public double findPrepDistance(int slotNumber) {
+        double distanceToIntake = slotNumber * Constants.kDistancePerSlot;
+        return -(Math.abs(Constants.kTotalDistance - distanceToIntake));
     }
 
     public double findIntakingDistance(boolean slotFull) {

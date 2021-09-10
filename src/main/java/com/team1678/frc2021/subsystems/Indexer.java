@@ -42,7 +42,7 @@ public class Indexer extends Subsystem {
         IDLE, INDEXING, UNJAMMING, PREPPING, FEEDING, SLOW_ZOOMING, HELLA_ZOOMING, BARFING,
     }
 
-    private int mSlotGoal;
+    private int mCurrentSlot;
     private final TalonFX mMaster;
     private State mState = State.IDLE;
 
@@ -102,17 +102,25 @@ public class Indexer extends Subsystem {
             //Indexing, pushing balls to the shooter
             case INDEXING:
                 mPeriodicIO.indexer_control_mode = ControlMode.MotionMagic;
-                mPeriodicIO.indexer_demand = mMotionPlanner.findIntakingDistance(slotsFilled());
+                double distanceToSlot = mMotionPlanner.findDistanceGoal(findFurthestFilledSlot());
+                mPeriodicIO.indexer_demand = distanceToSlot;
                 break;
             // Backwards in case of jamming
             case UNJAMMING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
                 mPeriodicIO.indexer_demand = -Constants.kZoomingVelocity;
                 break;
-            // Prepping the indexer for intaking when empty
+            // Prepping the indexer for intake to intake
             case PREPPING:
-                mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
-                if (slotsEmpty()) { mPeriodicIO.indexer_demand = Constants.kZoomingVelocity; }
+                mPeriodicIO.indexer_control_mode = ControlMode.MotionMagic;
+                double prepDistance = mMotionPlanner.findPrepDistance(findNearestFilledSlot());
+                if (slotsEmpty()) {
+                    mPeriodicIO.clearForIntake = true;
+                } else if (prepDistance == 0) {
+                    mPeriodicIO.clearForIntake = true;
+                } else {
+                    mPeriodicIO.indexer_demand = prepDistance;
+                }
                 break;
             // Feeding the shooter
             case FEEDING:
@@ -218,8 +226,26 @@ public class Indexer extends Subsystem {
 
     public int findNearestFilledSlot() {
         int rValue = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             if (mCleanSlots[i]) { rValue = i; }
+        }
+        return rValue;
+    }
+
+    public int findFurthestFilledSlot () {
+        int nValue = 0;
+        int rValue = 0;
+        for (int i = 0; i < 2; i++) {
+            if (mCleanSlots[i]) {
+                nValue = i;
+                break;
+            }
+        }
+        for (int i = nValue; i < 2; i++) {
+            if (!mCleanSlots[i]) {
+                rValue = i;
+                break;
+            }
         }
         return rValue;
     }
@@ -269,7 +295,7 @@ public class Indexer extends Subsystem {
         SmartDashboard.putNumber("IndexerVelocity", mPeriodicIO.indexer_velocity);
         SmartDashboard.putNumber("IndexerOffset", mOffset);
 
-        SmartDashboard.putNumber("SlotNumberGoal", mSlotGoal);
+        SmartDashboard.putNumber("Nearest Filled Slot", findNearestFilledSlot());
 
         SmartDashboard.putString("DirtySlots", Arrays.toString(mPeriodicIO.raw_slots));
         SmartDashboard.putString("CleanSlots", Arrays.toString(mCleanSlots));
@@ -368,6 +394,7 @@ public class Indexer extends Subsystem {
         public boolean snapped;
 
         // OUTPUTS
+        public boolean clearForIntake;
         public ControlMode indexer_control_mode = ControlMode.PercentOutput;
         public double indexer_demand;
     }
