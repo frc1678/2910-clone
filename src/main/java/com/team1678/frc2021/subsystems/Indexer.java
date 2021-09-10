@@ -26,14 +26,11 @@ public class Indexer extends Subsystem {
     private double mIndexerStart;
 
     // Slot Proxies
-    private final DigitalInput mSlot0Proxy = new DigitalInput(Constants.kSlot0Proxy);
-    private final DigitalInput mSlot1Proxy = new DigitalInput(Constants.kSlot1Proxy);
-    private final DigitalInput mSlot2Proxy = new DigitalInput(Constants.kSlot2Proxy);
-    private final DigitalInput mSlot3Proxy = new DigitalInput(Constants.kSlot3Proxy);
-    private final DigitalInput mSlot4Proxy = new DigitalInput(Constants.kSlot4Proxy);
+    private final DigitalInput mLowerBeamBreak = new DigitalInput(Constants.kLowerBeamBreak);
+    private final DigitalInput mUpperBeamBreak = new DigitalInput(Constants.kUpperBeamBreak);
 
     // Slot state arrays
-    private boolean[] mCleanSlots = { false, false, false, false, false };
+    private boolean[] mCleanSlots = { false, false, false };
 
 
     // Declare States and Wanted Actions
@@ -131,17 +128,17 @@ public class Indexer extends Subsystem {
                 }
                 mPeriodicIO.indexer_demand = IndexerMotionPlanner.findDistanceGoal(findNearestFilledSlot());
                 break;
-            // Indexer slow running
+            // Indexer slow running, for when the intake is running at slow speed
             case SLOW_ZOOMING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
                 mPeriodicIO.indexer_demand = (mBackwards ? -Constants.kZoomingVelocity : Constants.kZoomingVelocity) * 0.3;
                 break;
-            // Indexer fast running
+            // Indexer fast running, for when intake is running at fast speed AND shooter running
             case HELLA_ZOOMING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
                 mPeriodicIO.indexer_demand = (mBackwards ? -Constants.kZoomingVelocity : Constants.kZoomingVelocity) * 1.5;
                 break;
-            // Spit all balls out from the intake
+            // Spit all balls out back from the intake
             case BARFING:
                 mPeriodicIO.indexer_control_mode = ControlMode.Velocity;
                 mPeriodicIO.indexer_demand = (-Constants.kZoomingVelocity) * 2; // TODO Make the intake barf as well
@@ -353,11 +350,8 @@ public class Indexer extends Subsystem {
     @Override
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
-        mPeriodicIO.raw_slots[0] = mSlot0Proxy.get();  // Slot closest to the shooter
-        mPeriodicIO.raw_slots[1] = mSlot1Proxy.get();
-        mPeriodicIO.raw_slots[2] = mSlot2Proxy.get();
-        mPeriodicIO.raw_slots[3] = mSlot3Proxy.get();
-        mPeriodicIO.raw_slots[4] = mSlot4Proxy.get();
+        mPeriodicIO.raw_slots[0] = mLowerBeamBreak.get();  // Slot closest to the shooter
+        mPeriodicIO.raw_slots[1] = mUpperBeamBreak.get();
         mPeriodicIO.indexer_current = mMaster.getStatorCurrent();
     }
 

@@ -50,11 +50,8 @@ public class Constants {
 	
 
 	 // Indexer
-	 public static final int kSlot0Proxy = 1;
-	 public static final int kSlot1Proxy = 2;
-	 public static final int kSlot2Proxy = 3;
-	 public static final int kSlot3Proxy = 4;
-	 public static final int kSlot4Proxy = 5;
+	 public static final int kLowerBeamBreak = 1;      // TODO Find actual port
+	 public static final int kUpperBeamBreak = 2;      // TODO Find actual port
 	 public static final int kIndexerLimitSwitch = 6;
  
 	 public static final double kIndexerKp = 0.2;
@@ -65,20 +62,19 @@ public class Constants {
 	 public static final double kIndexerVelocityKi = 0.;
 	 public static final double kIndexerVelocityKd = 0.;
 	 public static final double kIndexerVelocityKf = .05;
-	 public static final int kIndexerMaxVelocity = 20000; // ticks / 100ms
-	 public static final int kIndexerMaxAcceleration = 40000; // ticks / 100ms / sec
+	 public static final int kIndexerMaxVelocity = 20000; // ticks / 100ms, TODO test for actual value
+	 public static final int kIndexerMaxAcceleration = 40000; // ticks / 100ms / sec, TODO test for actual value
  
 	 public static final int kIndexerSlots = 5;
 	 public static final int kDistancePerSlot = 360 / kIndexerSlots;		// TODO Find Actual Distance
 	 public static final int kTotalDistance = 5000;                         // TODO Find Actual Distance
-	 public static final double kIndexerDeadband = 2.0; // degrees
 
 	 public static final int kIndexerId = 7;
 
 	 public static final double kZoomingVelocity = 80.;
 
-	 public static final boolean[] kFullSlots = {true, true, true, true, true };
-	 public static final boolean[] kEmptySlots = {false, false, false, false, false };
+	 public static final boolean[] kFullSlots = {true, true, true };
+	 public static final boolean[] kEmptySlots = {false, false, false };
 
 	// shooter
 	public static final int kMasterFlywheelID = 14;
