@@ -9,10 +9,6 @@ public class IndexerMotionPlanner {
         throw new UnsupportedOperationException("Unsupported Orientation");
     }
 
-    public double findDistanceGoal(int slotNumber) {
-        return slotNumber * Constants.kDistancePerSlot;
-    }
-
     public double findPrepDistance(int slotNumber) {
         double distanceToIntake = slotNumber * Constants.kDistancePerSlot;
         return -(Math.abs(Constants.kTotalDistance - distanceToIntake));
