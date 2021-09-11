@@ -25,7 +25,6 @@ public class Shooter extends Subsystem {
     private static Shooter mInstance;
 
     private PeriodicIO mPeriodicIO = new PeriodicIO();
-
     private ReflectingCSVWriter<PeriodicIO> mCSVWriter = null;
 
     private final TalonFX mMaster;
@@ -34,7 +33,6 @@ public class Shooter extends Subsystem {
     private boolean mRunningManual = false;
 
     private static double kFlywheelVelocityConversion = 600.0 / 2048.0;
-
     private static double kShooterTolerance = 200.0;
 
     private Shooter() {
@@ -59,7 +57,8 @@ public class Shooter extends Subsystem {
 
         mSlave.setInverted(true);
         
-        mMaster1.set(ControlMode.PercentOutput, 0);
+        //TODO: Get motor ID
+        /* mMaster1.set(ControlMode.PercentOutput, 0);
         mMaster1.setInverted(false);
         mMaster1.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMaster1.enableVoltageCompensation(true);
@@ -70,7 +69,7 @@ public class Shooter extends Subsystem {
         mMaster1.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
         mMaster1.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
         mMaster1.selectProfileSlot(0, 0);
-
+        */
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
 
@@ -115,7 +114,7 @@ public class Shooter extends Subsystem {
         mRunningManual = true;
     }
 
-    public synchronized double getVoltage() {
+    public synchronized double getDemand() {
         return mPeriodicIO.flywheel_demand;
     }
 
