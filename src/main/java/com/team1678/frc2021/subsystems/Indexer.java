@@ -387,7 +387,7 @@ public class Indexer extends Subsystem {
     public static class PeriodicIO {
         // INPUTS
         public double timestamp;
-        private boolean[] raw_slots = { false, false, false, false, false };
+        private boolean[] raw_slots = { false, false, false };
 
         public double indexer_velocity;
         public double indexer_current;
