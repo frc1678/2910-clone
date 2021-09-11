@@ -13,6 +13,7 @@ public class LazyTalonSRX extends TalonSRX {
 
     public LazyTalonSRX(int deviceNumber) {
         super(deviceNumber);
+        super.configFactoryDefault();
     }
 
     public double getLastSet() {
