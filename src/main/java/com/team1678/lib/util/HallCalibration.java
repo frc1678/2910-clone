@@ -27,6 +27,10 @@ public class HallCalibration {
     // The value that should be returned when at the center of the magnet
     double mMagnetPosition;
 
+    /**
+     * The hall calibration instance class
+     * @param resetPosition the hall effect sensor's reset position
+     */
     public HallCalibration(double resetPosition) {
         mMagnetPosition = resetPosition;
 
@@ -49,7 +53,7 @@ public class HallCalibration {
         }
 
         /*
-         * Update the max and min overall values. Set the to the current value if it is
+         * Update the max and min overall values. Set to the the current value if it is
          * the first time running Update()
          */
         if (mainSensorValue > mMaxOverall || mFirstTime) {
