@@ -1,3 +1,4 @@
+
 package com.team1678.lib.util;
 
 public class HallCalibration {
@@ -7,7 +8,6 @@ public class HallCalibration {
      * so far. When calibration is complete it is approximately the top and bottom
      * of the magnet's range.
      */
-
     double mMaxHallTrue = 0;
     double mMinHallTrue = 0;
 
@@ -28,6 +28,10 @@ public class HallCalibration {
     // The value that should be returned when at the center of the magnet
     double mMagnetPosition;
 
+    /**
+     * The hall calibration instance class
+     * @param resetPosition the hall effect sensor's reset position
+     */
     public HallCalibration(double resetPosition) {
         mMagnetPosition = resetPosition;
 
@@ -35,11 +39,11 @@ public class HallCalibration {
 
     public double update(double mainSensorValue, boolean hallValue) {
         if (hallValue) {
+
             /*
              * Update the max and min values for when the hall sensor is triggered. Set them
              * to the current value if it is the first time seeing the magnet.
              */
-
             if (mainSensorValue > mMaxHallTrue || !mMagnetFound) {
                 mMaxHallTrue = mainSensorValue;
             }
@@ -50,10 +54,9 @@ public class HallCalibration {
         }
 
         /*
-         * Update the max and min overall values. Set the to the current value if it is
+         * Update the max and min overall values. Set to the the current value if it is
          * the first time running Update()
          */
-
         if (mainSensorValue > mMaxOverall || mFirstTime) {
             mMaxOverall = mainSensorValue;
         }
@@ -68,8 +71,8 @@ public class HallCalibration {
          * condition is not currently met, as that could reset any portions of code that
          * assume calibration is complete.
          */
-
         if ((mMagnetFound && mMaxOverall > mMaxHallTrue && mMinOverall < mMinHallTrue) || mCalibrated) {
+
             /*
              * The center of the magnet's range is mMagnetPosition, so the offset if
              * mMagnetPosition - the raw value of the center of the magnet
@@ -82,10 +85,18 @@ public class HallCalibration {
         return mainSensorValue + offset;
     }
 
+    /**
+     * Checks if the hall effect is calibrated
+     * @return if it is calibrated
+     */
     public boolean isCalibrated() {
         return mCalibrated;
     }
 
+    /**
+     * Gets the hall offset
+     * @return the current offset
+     */
     public double getOffset() {
         return offset;
     }
