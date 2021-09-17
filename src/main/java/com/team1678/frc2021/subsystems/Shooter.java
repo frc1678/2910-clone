@@ -37,7 +37,7 @@ public class Shooter extends Subsystem {
 
     private Shooter() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
-        mMaster1 = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
+        mMasterOverhead = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
 
         mMaster.set(ControlMode.PercentOutput, 0);
@@ -58,17 +58,17 @@ public class Shooter extends Subsystem {
         mSlave.setInverted(true);
         
         //TODO: Get motor ID
-        /* mMaster1.set(ControlMode.PercentOutput, 0);
-        mMaster1.setInverted(false);
-        mMaster1.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
-        mMaster1.enableVoltageCompensation(true);
+        /* mMasterOverhead.set(ControlMode.PercentOutput, 0);
+        mMasterOverhead.setInverted(false);
+        mMasterOverhead.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.enableVoltageCompensation(true);
 
-        mMaster1.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
-        mMaster1.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
-        mMaster1.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
-        mMaster1.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
-        mMaster1.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
-        mMaster1.selectProfileSlot(0, 0);
+        mMasterOverhead.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
+        mMasterOverhead.selectProfileSlot(0, 0);
         */
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
