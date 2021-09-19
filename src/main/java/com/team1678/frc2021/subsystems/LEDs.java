@@ -226,6 +226,11 @@ public class LEDs extends Subsystem{
     }
 
     @Override
+    public boolean checkSystem() {
+        return true;
+    }
+
+    @Override
     public void stop() {
 
     }
