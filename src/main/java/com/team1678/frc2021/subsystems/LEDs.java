@@ -142,13 +142,13 @@ public class LEDs extends Subsystem{
     @Override
     public void writePeriodicOutputs(){
         double timestamp = Timer.getFPGATimestamp();
-        if (currentState == State.RAINBOW && currentState.isCycleColors == true) {
+        if (currentState == State.RAINBOW && currentState.isCycleColors) {
             stateHue += 2;
             if (stateHue >= (360 - State.RAINBOW.startingHue)) {
                 stateHue = State.RAINBOW.startingHue;
             }
 
-            float rgb[] = new float[3];
+            float[] rgb = new float[3];
             MovingAverage averageR = new MovingAverage(5);
             MovingAverage averageG = new MovingAverage(5);
             MovingAverage averageB = new MovingAverage(5);
@@ -174,7 +174,7 @@ public class LEDs extends Subsystem{
 
             setLEDs(rgb[0], rgb[1], rgb[2]);
 
-        } else if (currentState == State.BREATHING_PINK && currentState.isCycleColors == true) {
+        } else if (currentState == State.BREATHING_PINK && currentState.isCycleColors) {
             if (startingTransTime <= currentState.transitionTime && !resetBreath) {
                 startingTransTime += currentState.transitionTime / 50.0;
             } else if (resetBreath) {
@@ -187,7 +187,7 @@ public class LEDs extends Subsystem{
             }
 
 
-            float rgb[] = new float[3];
+            float[] rgb = new float[3];
             MovingAverage averageR = new MovingAverage(10);
             MovingAverage averageG = new MovingAverage(10);
             MovingAverage averageB = new MovingAverage(10);
@@ -202,11 +202,11 @@ public class LEDs extends Subsystem{
 
             setLEDs(rgb[0], rgb[1], rgb[2]);
 
-        } else if(!lit && (timestamp - lastOffTime) >= currentState.offTime && currentState.isCycleColors == false){
+        } else if(!lit && (timestamp - lastOffTime) >= currentState.offTime && !currentState.isCycleColors){
             setLEDs(currentState.red, currentState.green, currentState.blue);
             lastOnTime = timestamp;
             lit = true;
-        } else if(lit && !Double.isInfinite(currentState.onTime) && currentState.isCycleColors == false){
+        } else if(lit && !Double.isInfinite(currentState.onTime) && !currentState.isCycleColors){
             if((timestamp - lastOnTime) >= currentState.onTime){
                 setLEDs(0.0, 0.0, 0.0);
                 lastOffTime = timestamp;
@@ -217,7 +217,7 @@ public class LEDs extends Subsystem{
 
     @Override
     public void outputTelemetry() {
-
+        // Things to output into the smartdashboard
     }
 
     @Override
@@ -232,6 +232,6 @@ public class LEDs extends Subsystem{
 
     @Override
     public void stop() {
-
+        // What to do on stop
     }
 }
