@@ -10,7 +10,7 @@ package com.team1678.frc2021.subsystems;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ctre.phoenix.CANifier;
+import com.ctre.phoenix.CANifier;               // Add 1678 canifier
 import com.ctre.phoenix.CANifier.LEDChannel;
 import com.team1678.frc2021.Ports;
 import com.team1678.frc2021.loops.ILooper;
@@ -34,6 +34,10 @@ public class LEDs extends Subsystem{
 
     CANifier canifier;
 
+    /**
+     * LED Utility class
+     * creates new instances
+     */
     public LEDs(){
         canifier = new CANifier(Ports.CANIFIER);
     }
@@ -43,6 +47,9 @@ public class LEDs extends Subsystem{
     double lastOffTime = 0.0;
     double transTime = 0.0;
 
+    /**
+     * The states of the LED and the RGB values
+     */
     public enum State{
         OFF(0.0, 0.0, 0.0, Double.POSITIVE_INFINITY, 0.0, false),
         DISABLED(255.0, 20.0, 30.0, Double.POSITIVE_INFINITY, 0.0, false),
@@ -62,6 +69,16 @@ public class LEDs extends Subsystem{
         float startingHue;
         List<List<Double>> colors = new ArrayList<List<Double>>();
         boolean isCycleColors;
+
+        /**
+         * The states
+         * @param r red
+         * @param g green
+         * @param b blue
+         * @param onTime the time that it is on
+         * @param offTime the time that it is off
+         * @param isCycleColors if it is currently cycling colors
+         */
         private State(double r, double g, double b, double onTime, double offTime, boolean isCycleColors){
             red = r / 255.0;
             green = g / 255.0;
@@ -70,17 +87,35 @@ public class LEDs extends Subsystem{
             this.offTime = offTime;
         }
 
+        /**
+         * The states
+         * @param hue the hue of the light in float
+         * @param cycle cycle or not
+         */
         private State(float hue, boolean cycle) {
             this.startingHue = hue;
             this.isCycleColors = cycle;
         }
 
+        /**
+         * The states
+         * @param hue the hue of the light in float
+         * @param transTime the transition time for the colors
+         * @param cycle cycle or not
+         */
         private State(float hue, double transTime, boolean cycle) {
             this.startingHue = hue;
             this.transitionTime = transTime;
             this.isCycleColors = cycle;
         }
 
+        /**
+         * The states
+         * @param colors the colors in a list of lists
+         * @param cycleTime the cycle time of the lights
+         * @param isCycleColors is currently cycling color or not
+         * @param transitionTime the transition time for the color
+         */
         private State(List<List<Double>> colors, double cycleTime, boolean isCycleColors, double transitionTime) {
             this.colors = colors;
             this.cycleTime = cycleTime;
@@ -89,8 +124,21 @@ public class LEDs extends Subsystem{
         }
     }
 
+    // Initialize the current state as off
     private State currentState = State.OFF;
-    public State getState(){ return currentState; }
+
+    /**
+     * Gets the current state
+     * @return current state
+     */
+    public State getState(){
+        return currentState;
+    }
+
+    /**
+     * Set the state
+     * @param newState pass in a new state
+     */
     private void setState(State newState){
         if(newState != currentState){
             currentState = newState;
@@ -100,6 +148,7 @@ public class LEDs extends Subsystem{
         }
     }
 
+    // Creates new loop
     private final Loop loop = new Loop(){
 
         @Override
@@ -119,7 +168,12 @@ public class LEDs extends Subsystem{
 
     };
 
-
+    /**
+     * Sets the LED for the canifiers
+     * @param r red
+     * @param g green
+     * @param b blue
+     */
     public void setLEDs(double r, double g, double b){
         //A: Green
         //B: Red
@@ -129,6 +183,10 @@ public class LEDs extends Subsystem{
         canifier.setLEDOutput(b, LEDChannel.LEDChannelC);
     }
 
+    /**
+     * Sets the state to new state
+     * @param state the state to set state to
+     */
     public void conformToState(State state){
         setState(state);
     }
@@ -139,6 +197,9 @@ public class LEDs extends Subsystem{
     public double startingTransTime = 0.0;
     public boolean resetBreath = false;
 
+    /**
+     * Writes to the periodic output
+     */
     @Override
     public void writePeriodicOutputs(){
         double timestamp = Timer.getFPGATimestamp();
@@ -215,21 +276,36 @@ public class LEDs extends Subsystem{
         }
     }
 
+    /**
+     * The output telemetry
+     * For things to putout into the smartdashboard
+     */
     @Override
     public void outputTelemetry() {
         // Things to output into the smartdashboard
     }
 
+    /**
+     * Registers the enabled ILoopers
+     * @param enabledLooper the looper that is enabled
+     */
     @Override
     public void registerEnabledLoops(ILooper enabledLooper){
         enabledLooper.register(loop);
     }
 
+    /**
+     * Checks the system
+     * @return ture
+     */
     @Override
     public boolean checkSystem() {
         return true;
     }
 
+    /**
+     * Stop
+     */
     @Override
     public void stop() {
         // What to do on stop
