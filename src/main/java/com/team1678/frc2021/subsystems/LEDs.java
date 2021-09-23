@@ -65,9 +65,17 @@ public class LEDs extends Subsystem{
         RAINBOW(0, true),
         BREATHING_PINK(357, 10.0, true);
 
-        double red, green, blue, onTime, offTime, cycleTime, transitionTime;
+        // Declares doubles
+        double red;
+        double green;
+        double blue;
+        double onTime;
+        double offTime;
+        double cycleTime;
+        double transitionTime;
+
         float startingHue;
-        List<List<Double>> colors = new ArrayList<List<Double>>();
+        List<List<Double>> colors = new ArrayList<>();
         boolean isCycleColors;
 
         /**
