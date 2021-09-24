@@ -1,8 +1,8 @@
-package com.team1678.frc2020.subsystems;
+package com.team1678.frc2021.subsystems;
 
-import com.team1678.frc2020.Constants;
-import com.team1678.frc2020.loops.ILooper;
-import com.team1678.frc2020.loops.Loop;
+import com.team1678.frc2021.Constants;
+import com.team1678.frc2021.loops.ILooper;
+import com.team1678.frc2021.loops.Loop;
 import com.team254.lib.util.ReflectingCSVWriter;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -29,13 +29,16 @@ public class Shooter extends Subsystem {
 
     private final TalonFX mMaster;
     private final TalonFX mSlave;
+    private final TalonFX mMasterOverhead;
 
     private boolean mRunningManual = false;
 
     private static double kFlywheelVelocityConversion = 600.0 / 2048.0;
+    private static double kWheelVelocityConversion = 600.0 / 2048.0;
     private static double kShooterTolerance = 200.0;
 
     private Shooter() {
+        //for flywheel motor
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mMasterOverhead = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
@@ -57,23 +60,23 @@ public class Shooter extends Subsystem {
 
         mSlave.setInverted(true);
         
-        //TODO: Get motor ID
-        /* mMasterOverhead.set(ControlMode.PercentOutput, 0);
+        //for overhead motor
+        mMasterOverhead.set(ControlMode.PercentOutput, 1);
         mMasterOverhead.setInverted(false);
         mMasterOverhead.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMasterOverhead.enableVoltageCompensation(true);
 
-        mMasterOverhead.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
-        mMasterOverhead.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
-        mMasterOverhead.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
-        mMasterOverhead.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
-        mMasterOverhead.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
-        mMasterOverhead.selectProfileSlot(0, 0);
-        */
-        mMaster.set(ControlMode.PercentOutput, 0);
+        mMasterOverhead.config_kP(1, Constants.kShooterP, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kI(1, Constants.kShooterI, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kD(1, Constants.kShooterD, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_kF(1, Constants.kShooterF, Constants.kLongCANTimeoutMs);
+        mMasterOverhead.config_IntegralZone(1, (int) (200.0 / kFlywheelVelocityConversion));
+        mMasterOverhead.selectProfileSlot(1, 0);
+        
+        mMasterOverhead.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
 
-        mMaster.configClosedloopRamp(0.2);
+        mMasterOverhead.configClosedloopRamp(0.2);
     }
 
     public synchronized static Shooter mInstance() {
@@ -132,12 +135,44 @@ public class Shooter extends Subsystem {
         }
         return false;
     }
+    
+    //for wheel
+    public synchronized void setVelocityOverhead(double velocity) {
+        mPeriodicIO.wheel_demand = velocity;
+        mRunningManual = false;
+    }
+
+    public synchronized void setOpenLoopOverhead(double wheel) {
+        mPeriodicIO.wheel_demand = wheel;
+        mRunningManual = true;
+    }
+
+    public synchronized double getDemandOverhead() {
+        return mPeriodicIO.wheel_demand;
+    }
+
+    public synchronized double getShooterRPMOverhead() {
+        return mMasterOverhead.getSelectedSensorVelocity();
+    }
+
+    public synchronized boolean spunUpOverhead() {
+        if (mPeriodicIO.wheel_demand > 0) {
+            return Util.epsilonEquals(mPeriodicIO.flywheel_demand, mPeriodicIO.flywheel_velocity, kShooterTolerance);
+        }
+        return false;
+    }
 
     public synchronized void setVelocity(double velocity) {
         mPeriodicIO.flywheel_demand = velocity;
         mRunningManual = false;
     }
 
+    public synchronized void setVelocity(double velocity) {
+        mPeriodicIO.flywheel_demand = velocity;
+        mRunningManual = false;
+    }
+
+    //for flywheel
     @Override
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
@@ -166,6 +201,40 @@ public class Shooter extends Subsystem {
         SmartDashboard.putNumber("Flywheel Current", mPeriodicIO.flywheel_current);
         SmartDashboard.putNumber("Flywheel Goal", mPeriodicIO.flywheel_demand);
         SmartDashboard.putNumber("Flywheel Temperature", mPeriodicIO.flywheel_temperature);
+        if (mCSVWriter != null) {
+            mCSVWriter.write();
+        }
+    }
+    
+    //for wheel
+    @Override
+    public synchronized void readPeriodicInputsOverhead() {
+        mPeriodicIO.timestamp = Timer.getFPGATimestamp();
+
+        mPeriodicIO.wheel_velocity = mMaster.getSelectedSensorVelocity() * kFlywheelVelocityConversion;
+        mPeriodicIO.wheel_voltage = mMaster.getMotorOutputVoltage();
+        mPeriodicIO.wheel_current = mMaster.getStatorCurrent();
+        mPeriodicIO.wheel_temperature = mMaster.getTemperature();
+        if (mCSVWriter != null) {
+            mCSVWriter.add(mPeriodicIO);
+        }
+    }
+
+    @Override
+    public void writePeriodicOutputsOverhead() {
+        if (!mRunningManual) {
+            mMasterOverhead.set(ControlMode.Velocity, mPeriodicIO.wheel_demand / kWheelVelocityConversion);
+        } else {
+            mMasterOverhead.set(ControlMode.PercentOutput, 0);
+        }
+    }
+    
+    @Override
+    public synchronized void outputTelemetryOverhead() {
+        SmartDashboard.putNumber("Wheel Velocity", mPeriodicIO.flywheel_velocity);
+        SmartDashboard.putNumber("Wheel Current", mPeriodicIO.flywheel_current);
+        SmartDashboard.putNumber("Wheel Goal", mPeriodicIO.flywheel_demand);
+        SmartDashboard.putNumber("Wheel Temperature", mPeriodicIO.flywheel_temperature);
         if (mCSVWriter != null) {
             mCSVWriter.write();
         }
@@ -204,8 +273,13 @@ public class Shooter extends Subsystem {
         public double flywheel_voltage;
         public double flywheel_current;
         public double flywheel_temperature;
+        public double wheel_velocity;
+        public double wheel_voltage;
+        public double wheel_current;
+        public double wheel_temperature;
 
         //OUTPUTS
         public double flywheel_demand;
+        public double wheel_demand;
     }
 }
