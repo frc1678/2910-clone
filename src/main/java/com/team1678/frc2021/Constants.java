@@ -6,6 +6,7 @@ import java.util.List;
 import com.team1323.lib.util.InterpolatingDouble;
 import com.team1323.lib.util.InterpolatingTreeMap;
 import com.team1678.frc2021.subsystems.Limelight.LimelightConstants;
+import com.team1678.frc2021.subsystems.ServoMotorSubsystem;
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
 import com.team254.lib.geometry.Translation2d;
@@ -89,6 +90,47 @@ public class Constants {
 	public static final double kTriggerF = 0.05;
 
 	public static final double kTriggerRPM = 5000.0;
+
+	// hood
+	public static final ServoMotorSubsystem.ServoMotorSubsystemConstants kHoodConstants = new ServoMotorSubsystem.ServoMotorSubsystemConstants();
+	static {
+		kHoodConstants.kName = "Hood";
+
+		kHoodConstants.kMasterConstants.id = 8;
+		kHoodConstants.kMasterConstants.invert_motor = true;
+		kHoodConstants.kMasterConstants.invert_sensor_phase = false;
+
+		// Unit == Degrees
+		kHoodConstants.kHomePosition = 0.0; // Degrees
+		kHoodConstants.kTicksPerUnitDistance = (2048.0 * 93.8) / 360.0;
+		kHoodConstants.kKp = 0.5;
+		kHoodConstants.kKi = 0;
+		kHoodConstants.kKd = 0;
+		kHoodConstants.kKf = 0.05;
+		kHoodConstants.kMaxIntegralAccumulator = 0;
+		kHoodConstants.kIZone = 0; // Ticks
+		kHoodConstants.kDeadband = 0; // Ticks
+
+		kHoodConstants.kPositionKp = 0.1;
+		kHoodConstants.kPositionKi = 0;
+		kHoodConstants.kPositionKd = 0;
+		kHoodConstants.kPositionKf = 0.0;
+		kHoodConstants.kPositionMaxIntegralAccumulator = 0;
+		kHoodConstants.kPositionIZone = 0; // Ticks
+		kHoodConstants.kPositionDeadband = 0; // Ticks
+
+		// degrees of limelight pitch from horiz
+		kHoodConstants.kMinUnitsLimit = 17.66;
+		kHoodConstants.kMaxUnitsLimit = 89.5;
+
+		kHoodConstants.kCruiseVelocity = 20000; // Ticks / 100ms
+		kHoodConstants.kAcceleration = 20000; // Ticks / 100ms / s
+		kHoodConstants.kRampRate = 0.0; // s
+		kHoodConstants.kContinuousCurrentLimit = 35; // amps
+		kHoodConstants.kPeakCurrentLimit = 40; // amps
+		kHoodConstants.kPeakCurrentDuration = 10; // milliseconds
+		kHoodConstants.kMaxVoltage = 12.0;
+	}
 
 	// limelight
 	 public static final LimelightConstants kLimelightConstants = new LimelightConstants();
