@@ -10,7 +10,8 @@ package com.team1678.frc2021.subsystems;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ctre.phoenix.CANifier;               // Add 1678 canifier
+import com.team1678.frc2021.subsystems.Canifier;
+import com.ctre.phoenix.CANifier;
 import com.ctre.phoenix.CANifier.LEDChannel;
 import com.team1678.frc2021.Ports;
 import com.team1678.frc2021.loops.ILooper;
@@ -39,7 +40,7 @@ public class LEDs extends Subsystem{
      * creates new instances
      */
     public LEDs(){
-        canifier = new CANifier(Ports.CANIFIER);
+        canifier = Canifier.getInstance().getCanifier();
     }
 
     boolean lit = false;
