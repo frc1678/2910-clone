@@ -3,9 +3,12 @@ package com.team2910.lib.autos;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import com.team1678.frc2021.RobotContainer;
 import com.team1678.frc2021.auto.modes.StandStillMode;
 import com.team1678.frc2021.subsystems.Swerve;
 import com.team2910.lib.commands.FollowTrajectoryCommand;
+import com.team2910.lib.control.Trajectory;
+import com.team2910.lib.math.RigidTransform2;
 import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.util.Side;
 
@@ -19,11 +22,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.CommandGroupBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 public class AutonomousSelector {
     private final AutonomousTrajectories trajectories;
-
-    private static SendableChooser<Side> sideChooser;
+    
     private static SendableChooser<Rotation2> orientationChooser;
     private static SendableChooser<AutonomousMode> autonomousModeChooser;
     //private static NetworkTableEntry testPath;
@@ -42,49 +45,45 @@ public class AutonomousSelector {
         autoTab.add("Starting Orientation", orientationChooser);
 
         autonomousModeChooser = new SendableChooser<>();
-        autonomousModeChooser.setDefaultOption("Driven", AutonomousMode.DRIVEN);
-        autonomousModeChooser.addOption("Hybrid", AutonomousMode.HYBRID);
-        autonomousModeChooser.addOption("Autonomous", AutonomousMode.AUTONOMOUS);
         autonomousModeChooser.addOption("Test Straight", AutonomousMode.TEST_STRAIGHT);
         autoTab.add("Mode", autonomousModeChooser);
 
-        //testPath = autoTab.add("Test Path", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
     }
 
     public AutonomousSelector(AutonomousTrajectories trajectories) {
         this.trajectories = trajectories;
     }
 
-    public CommandBase getCommand(){
+    private Command getTestStraight(RobotContainer container) {
+        SequentialCommandGroup command = new SequentialCommandGroup();
+        resetRobotPose(command, container, trajectories.getTestPath());
+        follow(command, container, trajectories.getTestPath());
+
+        return command;
+    }
+
+    private void follow(SequentialCommandGroup command, RobotContainer container, Trajectory trajectory) {
+        command.addCommands(new FollowTrajectoryCommand(container.getDrivetrainSubsystem(), trajectory));
+    }
+
+    private void resetRobotPose(SequentialCommandGroup command, RobotContainer container, Trajectory trajectory) {
+        command.addCommands(new InstantCommand(() -> container.getDrivetrainSubsystem().resetGyroAngle(Rotation2.ZERO)));
+        command.addCommands(new InstantCommand(() -> container.getDrivetrainSubsystem().resetPose(
+                new RigidTransform2(trajectory.calculate(0.0).getPathState().getPosition(), Rotation2.ZERO))));
+    }
+
+    public Command getCommand(RobotContainer container){
         AutonomousMode mode = autonomousModeChooser.getSelected();
-        Rotation2 startingOrientation = orientationChooser.getSelected();
-        FollowTrajectoryCommand testPathCommand = new FollowTrajectoryCommand(trajectories.getTestPath());
-
-        CommandGroupBase group = CommandGroupBase.sequence();
-        
-        //group.setRunWhenDisabled(true);
-
-        CommandGroupBase.sequence(new InstantCommand(() -> {
-            Swerve.getInstance().getGyroscope().setAdjustmentAngle(
-                    Swerve.getInstance().getGyroscope().getUnadjustedAngle().rotateBy(startingOrientation)
-            );
-        }));
 
         switch (mode) {
-            case DRIVEN: 
-                break;
-            case HYBRID: 
-                break;
-            case AUTONOMOUS:
-                break;
             case TEST_STRAIGHT:
-                group.addCommands(testPathCommand);
-                break;
+                return getTestStraight(container);
             default:
                 System.out.println("ERROR: unexpected auto mode: " + mode);
                 break; 
         }
-        return group;
+
+        return getTestStraight(container);
 
     }
 
@@ -93,9 +92,6 @@ public class AutonomousSelector {
     }
 
     private enum AutonomousMode {
-        DRIVEN,
-        HYBRID,
-        AUTONOMOUS,
         TEST_STRAIGHT
     }
 }

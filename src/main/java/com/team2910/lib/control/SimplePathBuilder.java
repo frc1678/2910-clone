@@ -4,7 +4,6 @@ import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.math.Vector2;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 

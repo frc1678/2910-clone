@@ -32,7 +32,7 @@ public class Shooter extends Subsystem {
     private final TalonFX mMasterOverhead;
 
     private boolean mRunningManual = false;
-
+0;
     private static double kFlywheelVelocityConversion = 600.0 / 2048.0;
     private static double kWheelVelocityConversion = 600.0 / 2048.0;
     private static double kShooterTolerance = 200.0;
@@ -58,7 +58,7 @@ public class Shooter extends Subsystem {
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 40, 100, 0.02);
         mMaster.configSupplyCurrentLimit(curr_lim);
 
-        mSlave.setInverted(true);
+        mSlave.setInverted(false);
         
         //for overhead motor
         mMasterOverhead.set(ControlMode.PercentOutput, 1);
@@ -79,6 +79,12 @@ public class Shooter extends Subsystem {
         mMasterOverhead.configClosedloopRamp(0.2);
     }
 
+    public synchronized boolean spunUp() {
+        if (mPeriodicIO.flywheel_demand > 0) {
+            return Util.epsilonEquals(mPeriodicIO.flywheel_demand, mPeriodicIO.flywheel_velocity, kShooterTolerance);
+        }
+        return false;
+    }
     public synchronized static Shooter mInstance() {
         if (mInstance == null) {
             mInstance = new Shooter();
@@ -127,13 +133,6 @@ public class Shooter extends Subsystem {
 
     public synchronized double getVelocity() {
         return mPeriodicIO.flywheel_velocity;
-    }
-
-    public synchronized boolean spunUp() {
-        if (mPeriodicIO.flywheel_demand > 0) {
-            return Util.epsilonEquals(mPeriodicIO.flywheel_demand, mPeriodicIO.flywheel_velocity, kShooterTolerance);
-        }
-        return false;
     }
     
     //for wheel

@@ -5,6 +5,8 @@ import com.team1678.frc2021.subsystems.Swerve;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
+import com.team2910.lib.autos.AutonomousSelector;
+import com.team2910.lib.autos.AutonomousTrajectories;
 import com.team2910.lib.commands.DriveCommand;
 import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.robot.*;
@@ -14,6 +16,9 @@ public class RobotContainer {
     private final XboxController driver = new XboxController(0);
 
     private final Swerve swerve = Swerve.getInstance();
+    
+    private final AutonomousSelector autonomousSelector;
+    private AutonomousTrajectories autonomousTrajectories;
 
     private static RobotContainer instance = null;
 	
@@ -26,6 +31,9 @@ public class RobotContainer {
     public RobotContainer() {
         driver.getLeftXAxis().setInverted(true);
         driver.getRightXAxis().setInverted(true);
+
+        autonomousTrajectories  = new AutonomousTrajectories();
+        autonomousSelector= new AutonomousSelector(autonomousTrajectories);
 
         CommandScheduler.getInstance().setDefaultCommand(swerve, new DriveCommand(swerve, getDriveForwardAxis(), getDriveStrafeAxis(), getDriveRotationAxis()));
 
@@ -60,6 +68,10 @@ public class RobotContainer {
 
     public XboxController getDriver() {
         return driver;
+    }
+
+    public Command getAutonomousCommand() {
+        return autonomousSelector.getCommand(this);
     }
 
     public void outputTelemetry(){
