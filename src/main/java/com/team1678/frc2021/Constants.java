@@ -186,10 +186,10 @@ public class Constants {
 	public static final int kFrontRightDriveId = 13;
 
 	public static final int kFrontLeftRotationId = 8;
-	public static final int kFrontLeftDriveId = 4;
+	public static final int kFrontLeftDriveId = 3;
 	
 	public static final int kBackLeftRotationId = 5;
-	public static final int kBackLeftDriveId = 1;
+	public static final int kBackLeftDriveId = 4;
 	
 	public static final int kBackRightRotationId = 12;
 	public static final int kBackRightDriveId = 16;
