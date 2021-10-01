@@ -33,8 +33,8 @@ public class Shooter extends Subsystem {
 
     private boolean mRunningManual = false;
 0;
-    private static double kFlywheelVelocityConversion = 600.0 / 2048.0;
-    private static double kWheelVelocityConversion = 600.0 / 2048.0;
+    private static double kUpperVelocityConversion = 600.0 / 2048.0;
+    private static double kMainVelocityConversion = 600.0 / 2048.0;
     private static double kShooterTolerance = 200.0;
 
     private Shooter() {
@@ -52,7 +52,7 @@ public class Shooter extends Subsystem {
         mMaster.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
         mMaster.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
         mMaster.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
-        mMaster.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
+        mMaster.config_IntegralZone(0, (int) (200.0 / kUpperlVelocityConversion));
         mMaster.selectProfileSlot(0, 0);
 
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 40, 100, 0.02);
