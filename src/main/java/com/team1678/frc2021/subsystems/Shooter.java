@@ -32,7 +32,7 @@ public class Shooter extends Subsystem {
     private final TalonFX mMasterOverhead;
 
     private boolean mRunningManual = false;
-    private static double kUpperVelocityConversion = 600.0 / 2048.0;
+    private static double kUpperVelocityConversion = 75.0 / 512.0;
     private static double kMainVelocityConversion = 600.0 / 2048.0;
     private static double kShooterTolerance = 200.0;
 
