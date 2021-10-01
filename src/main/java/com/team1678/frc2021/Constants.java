@@ -129,7 +129,9 @@ public class Constants {
 		kHoodConstants.kContinuousCurrentLimit = 35; // amps
 		kHoodConstants.kPeakCurrentLimit = 40; // amps
 		kHoodConstants.kPeakCurrentDuration = 10; // milliseconds
-		kHoodConstants.kMaxVoltage = 12.0;
+		kHoodConstants.kMaxVoltage = 6;
+
+		kHoodConstants.kAbsoluteEncoderID = 3;
 	}
 
 	// limelight

@@ -31,6 +31,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+      // TODO: Initialise hood and do hood setpoint login in Superstructure.
       swerve = Swerve.getInstance();
       robotContainer = new RobotContainer();
       updateManager = new UpdateManager(

@@ -16,10 +16,12 @@ import com.team254.lib.drivers.TalonUtil;
 import com.team254.lib.util.Util;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 
 import java.util.ArrayList;
 
 public class Hood extends ServoMotorSubsystem {
+    private AnalogEncoder mEncoder;
     private static Hood mInstance;
     private boolean mHoming = true;
 
@@ -27,19 +29,20 @@ public class Hood extends ServoMotorSubsystem {
         if (mInstance == null) {
             mInstance = new Hood(Constants.kHoodConstants);
         }
-
         return mInstance;
     }
 
     private Hood(final ServoMotorSubsystemConstants constants) {
         super(constants);
-        mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
+        mEncoder = new AnalogEncoder(Constants.kHoodConstants.kAbsoluteEncoderID);
+        //mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
     }
 
+    /*
     @Override
     public synchronized boolean atHomingLocation() {
         return Canifier.getInstance().getHoodLimit();
-    }
+    }*/
 
     public synchronized boolean isHoming() {
         return mHoming;
@@ -72,13 +75,19 @@ public class Hood extends ServoMotorSubsystem {
 
     @Override
     public synchronized void readPeriodicInputs() {
-        if (mHoming && atHomingLocation()) {
+        if (mHoming) {
             System.out.println("is homing");
-            mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
-            mMaster.overrideSoftLimitsEnable(true);
+            mEncoder.reset();
+            // Motor to encoder
+
+            //mMaster.setSelectedSensorPosition(mEncoder.getDistance());
+            //mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
+
+            //mMaster.overrideSoftLimitsEnable(true);
             System.out.println("Homed!!!");
             mHoming = false;
         }
+        SmartDashboard.putNumber("Hood Encoder Readout", mEncoder.getDistance());
         super.readPeriodicInputs();
     }
 
