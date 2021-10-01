@@ -74,6 +74,9 @@ public abstract class ServoMotorSubsystem extends Subsystem {
 
         public int kStastusFrame8UpdateRate = 1000;
         public boolean kRecoverPositionOnReset = false;
+
+        public int kAbsoluteEncoderID = 3;
+
     }
 
     protected final ServoMotorSubsystemConstants mConstants;
