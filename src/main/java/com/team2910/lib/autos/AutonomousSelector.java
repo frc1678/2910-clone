@@ -66,10 +66,16 @@ public class AutonomousSelector {
         command.addCommands(new FollowTrajectoryCommand(container.getDrivetrainSubsystem(), trajectory));
     }
 
+
+    /**
+     * @deprecated Doesn't do anything needs fix
+     */
+    @Deprecated
     private void resetRobotPose(SequentialCommandGroup command, RobotContainer container, Trajectory trajectory) {
+        /*
         command.addCommands(new InstantCommand(() -> container.getDrivetrainSubsystem().resetGyroAngle(Rotation2.ZERO)));
         command.addCommands(new InstantCommand(() -> container.getDrivetrainSubsystem().resetPose(
-                new RigidTransform2(trajectory.calculate(0.0).getPathState().getPosition(), Rotation2.ZERO))));
+                new RigidTransform2(trajectory.calculate(0.0).getPathState().getPosition(), Rotation2.ZERO))));*/
     }
 
     public Command getCommand(RobotContainer container){
