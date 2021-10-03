@@ -174,7 +174,10 @@ public class Intake extends Subsystem {
     public boolean checkSystem() {
         return true;
     }
-     
+    @OverRide
+    public void status() {
+    return mIntake;
+    }
 
     public static class PeriodicIO {
         // INPUTS
