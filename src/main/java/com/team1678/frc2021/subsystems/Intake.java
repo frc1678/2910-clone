@@ -21,7 +21,7 @@ public class Intake extends Subsystem {
 
     private static double kIntakingVoltage = 9.0;
     private static double kIdleVoltage = 0;
-    public static double mCurrent;
+    private static double mCurrent;
 
     private static Intake mInstance;
     private TimeDelayedBoolean mIntakeSolenoidTimer = new TimeDelayedBoolean();
