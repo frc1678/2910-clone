@@ -278,14 +278,14 @@ public abstract class ServoMotorSubsystem extends Subsystem {
             mMaster.clearStickyFaults(0);
         }
         if (mMaster.getControlMode() == ControlMode.MotionMagic) {
-            mPeriodicIO.active_trajectory_position = mMaster.getActiveTrajectoryPosition();
+            mPeriodicIO.active_trajectory_position = (int) mMaster.getActiveTrajectoryPosition();
 
             if (mPeriodicIO.active_trajectory_position < mReverseSoftLimitTicks) {
                 DriverStation.reportError(mConstants.kName + ": Active trajectory past reverse soft limit!", false);
             } else if (mPeriodicIO.active_trajectory_position > mForwardSoftLimitTicks) {
                 DriverStation.reportError(mConstants.kName + ": Active trajectory past forward soft limit!", false);
             }
-            final int newVel = mMaster.getActiveTrajectoryVelocity();
+            final int newVel = (int) mMaster.getActiveTrajectoryVelocity();
             if (Util.epsilonEquals(newVel, mConstants.kCruiseVelocity, Math.max(1, mConstants.kDeadband)) || Util
                     .epsilonEquals(newVel, mPeriodicIO.active_trajectory_velocity, Math.max(1, mConstants.kDeadband))) {
                 // Mechanism is ~constant velocity.
@@ -310,9 +310,9 @@ public abstract class ServoMotorSubsystem extends Subsystem {
         mPeriodicIO.master_stator_current = mMaster.getStatorCurrent();
         mPeriodicIO.output_voltage = mMaster.getMotorOutputVoltage();
         mPeriodicIO.output_percent = mMaster.getMotorOutputPercent();
-        mPeriodicIO.position_ticks = mMaster.getSelectedSensorPosition(0);
+        mPeriodicIO.position_ticks = (int) mMaster.getSelectedSensorPosition(0);
         mPeriodicIO.position_units = ticksToHomedUnits(mPeriodicIO.position_ticks);
-        mPeriodicIO.velocity_ticks_per_100ms = mMaster.getSelectedSensorVelocity(0);
+        mPeriodicIO.velocity_ticks_per_100ms = (int) mMaster.getSelectedSensorVelocity(0);
 
         if (mConstants.kRecoverPositionOnReset) {
             mPeriodicIO.absolute_pulse_position = mMaster.getSensorCollection().getIntegratedSensorAbsolutePosition();
@@ -549,6 +549,7 @@ public abstract class ServoMotorSubsystem extends Subsystem {
     @Override
     public void outputTelemetry() {
         SmartDashboard.putNumber(mConstants.kName + ": Position (units)", mPeriodicIO.position_units);
+        SmartDashboard.putNumber(mConstants.kName + ": goal (units)", mPeriodicIO.demand);
         SmartDashboard.putBoolean(mConstants.kName + ": Homing Location", atHomingLocation());
     }
 }
