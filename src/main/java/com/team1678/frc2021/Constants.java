@@ -176,7 +176,8 @@ public class Constants {
 
 	public static double kSwerveRotationMotorTicksPerRotation = 2048 * 12.4;
 
-	public static int kIntakeRollerId = 3;
+	public static int kMasterIntakeRollerId = 3;
+	public static int kSlaverIntakeRollerId = 6; //TODO Check real ID
 	public static int kDeploySolenoidId = 4;
 	public static int kShiftSolenoidId = 5;
 	public static int kDeployId = 31;
