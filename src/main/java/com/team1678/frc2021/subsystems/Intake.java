@@ -18,8 +18,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.ArrayList;
 
 public class Intake extends Subsystem {
+
     private static double kIntakingVoltage = 9.0;
     private static double kIdleVoltage = 0;
+    public static double mCurrent;
 
     private static Intake mInstance;
     private TimeDelayedBoolean mIntakeSolenoidTimer = new TimeDelayedBoolean();
@@ -49,20 +51,11 @@ public class Intake extends Subsystem {
         mSlave.setInverted(true);
     }
 
-    public synchronized static Intake getInstance() {
+    public static synchronized Intake getInstance() {
         if (mInstance == null) {
             mInstance = new Intake();
         }
         return mInstance;
-    }
-
-    @Override
-    public synchronized void outputTelemetry() {
-        SmartDashboard.putNumber("Intake Current", mPeriodicIO.current);
-        SmartDashboard.putString("Intake State", mState.toString());
-        if (mCSVWriter != null) {
-            mCSVWriter.write();
-        }
     }
 
     @Override
@@ -72,6 +65,7 @@ public class Intake extends Subsystem {
 
     @Override
     public void zeroSensors() {
+        // Zero sensors?
     }
 
     @Override
@@ -96,10 +90,6 @@ public class Intake extends Subsystem {
                 stop();
             }
         });
-    }
-
-    public synchronized State getState() {
-        return mState;
     }
 
     public void runStateMachine() {
@@ -139,6 +129,14 @@ public class Intake extends Subsystem {
         return mPeriodicIO.demand;
     }
 
+    public double getCurrent() {
+        return mCurrent;
+    }
+
+    public synchronized State getState() {
+        return mState;
+    }
+
     public void setState(WantedAction wanted_state) {
         switch (wanted_state) {
         case NONE:
@@ -159,6 +157,7 @@ public class Intake extends Subsystem {
     @Override
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.intake_out = mIntakeSolenoidTimer.update(mPeriodicIO.deploy, 0.2);
+        mPeriodicIO.current = mCurrent;
         if (mCSVWriter != null) {
             mCSVWriter.add(mPeriodicIO);
         }
@@ -171,12 +170,17 @@ public class Intake extends Subsystem {
     }
 
     @Override
+    public synchronized void outputTelemetry() {
+        SmartDashboard.putNumber("Intake Current", mPeriodicIO.current);
+        SmartDashboard.putString("Intake State", mState.toString());
+        if (mCSVWriter != null) {
+            mCSVWriter.write();
+        }
+    }
+
+    @Override
     public boolean checkSystem() {
         return true;
-    }
-    @OverRide
-    public void status() {
-    return mIntake;
     }
 
     public static class PeriodicIO {
