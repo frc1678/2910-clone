@@ -63,7 +63,8 @@ public class AutonomousSelector {
     }
 
     private void follow(SequentialCommandGroup command, RobotContainer container, Trajectory trajectory) {
-        command.addCommands(new FollowTrajectoryCommand(container.getDrivetrainSubsystem(), trajectory));
+        // Not worying about autos for now
+        //command.addCommands(new FollowTrajectoryCommand(container.getDrivetrainSubsystem(), trajectory));
     }
 
 

@@ -4,16 +4,15 @@
 
 package com.team1678.frc2021;
 
+import com.team1678.frc2021.subsystems.Swerve;
+import com.team2910.lib.autos.AutonomousSelector;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-
-import frc.robot.autos.*;
-import frc.robot.commands.*;
-import frc.robot.subsystems.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -41,14 +40,15 @@ public class RobotContainer {
   private final Swerve s_Swerve = new Swerve();
 
   /* Autonomous Selector */
-  private final AutonomousSelector autonomousSelector;
+  //private final AutonomousSelector autonomousSelector;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     boolean fieldRelative = true;
     boolean openLoop = true;
-    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, translationAxis, strafeAxis, rotationAxis, fieldRelative, openLoop));
-    autonomousSelector = new AutonomousSelector();
+    // We're not going to worry about Teleop right now.
+    //s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, translationAxis, strafeAxis, rotationAxis, fieldRelative, openLoop));
+    //autonomousSelector = new AutonomousSelector();
 
     // Configure the button bindings
     configureButtonBindings();
@@ -64,10 +64,10 @@ public class RobotContainer {
     /* Driver Buttons */
     zeroGyro.whenPressed(new InstantCommand(() -> s_Swerve.zeroGyro()));
     // Snap Commands
-    yButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(0)));
-    bButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(90)));
-    aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
-    xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270)));    
+    //yButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(0)));
+    //bButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(90)));
+    //aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
+    //xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270)));    
   }
 
   /**
@@ -75,8 +75,13 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
+  /*public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
     return autonomousSelector.getCommand(s_Swerve);
+  }*/
+
+  public Swerve getDrivetrainSystem() {
+    return Swerve.getInstance();
   }
+  
 }
