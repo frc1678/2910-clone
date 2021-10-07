@@ -4,12 +4,11 @@
 
 package com.team1678.frc2021;
 
+import com.team1678.frc2021.commands.TeleopSwerve;
 import com.team1678.frc2021.subsystems.Swerve;
-import com.team2910.lib.autos.AutonomousSelector;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -47,7 +46,7 @@ public class RobotContainer {
     boolean fieldRelative = true;
     boolean openLoop = true;
     // We're not going to worry about Teleop right now.
-    //s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, translationAxis, strafeAxis, rotationAxis, fieldRelative, openLoop));
+    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, translationAxis, strafeAxis, rotationAxis, fieldRelative, openLoop));
     //autonomousSelector = new AutonomousSelector();
 
     // Configure the button bindings
