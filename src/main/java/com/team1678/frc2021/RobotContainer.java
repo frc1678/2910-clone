@@ -79,7 +79,7 @@ public class RobotContainer {
     return autonomousSelector.getCommand(s_Swerve);
   }*/
 
-  public Swerve getDrivetrainSystem() {
+  public Swerve getDrivetrainSubsystem() {
     return Swerve.getInstance();
   }
   

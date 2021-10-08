@@ -3,6 +3,8 @@
 // the WPILib BSD license file in the root directory of this project.
 package com.team1678.frc2021;
 
+import com.team1678.frc2021.subsystems.Swerve;
+import com.team2910.lib.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -18,6 +20,8 @@ public class Robot extends TimedRobot {
 
   private Command m_autonomousCommand;
 
+  public RobotContainer robotContainer;
+
   private RobotContainer m_robotContainer;
 
   /**
@@ -29,7 +33,8 @@ public class Robot extends TimedRobot {
     ctreConfigs = new CTREConfigs();
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
+      // TODO: Initialise hood and do hood setpoint login in Superstructure.
+      robotContainer = new RobotContainer();
   }
 
   /**
