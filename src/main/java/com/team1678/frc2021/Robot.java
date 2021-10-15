@@ -17,10 +17,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   public static CTREConfigs ctreConfigs;
-
   private Command m_autonomousCommand;
-
-  public RobotContainer robotContainer;
+  public RobotContainer m_robotContainer;
   /**
    * This function is run when the 3 is first started up and should be used for any
    * initialization code.
@@ -31,7 +29,7 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
       // TODO: Initialise hood and do hood setpoint login in Superstructure.
-      robotContainer = new RobotContainer();
+      m_robotContainer = new RobotContainer();
   }
 
   /**
@@ -60,14 +58,12 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    /*
-    Autonomous code which is not working right now.
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
-    }*/
+    }
   }
 
   /** This function is called periodically during autonomous. */

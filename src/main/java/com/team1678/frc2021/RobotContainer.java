@@ -9,9 +9,14 @@ import com.team1678.frc2021.subsystems.Swerve;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
+import com.team1678.frc2021.auto.*;
+import com.team1678.frc2021.commands.*;
+import com.team1678.frc2021.subsystems.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -39,15 +44,14 @@ public class RobotContainer {
   private final Swerve s_Swerve = new Swerve();
 
   /* Autonomous Selector */
-  //private final AutonomousSelector autonomousSelector;
+  private final AutonomousSelector autonomousSelector;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     boolean fieldRelative = true;
     boolean openLoop = true;
-    // We're not going to worry about Teleop right now.
     s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, translationAxis, strafeAxis, rotationAxis, fieldRelative, openLoop));
-    //autonomousSelector = new AutonomousSelector();
+    autonomousSelector = new AutonomousSelector();
 
     // Configure the button bindings
     configureButtonBindings();
@@ -74,10 +78,10 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  /*public Command getAutonomousCommand() {
+  public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
     return autonomousSelector.getCommand(s_Swerve);
-  }*/
+  }
 
   public Swerve getDrivetrainSubsystem() {
     return Swerve.getInstance();
