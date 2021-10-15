@@ -3,11 +3,19 @@
 // the WPILib BSD license file in the root directory of this project.
 package com.team1678.frc2021;
 
+import com.team1323.lib.util.CrashTracker;
 import com.team1678.frc2021.subsystems.Swerve;
 import com.team2910.lib.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import com.team1678.frc2021.SubsystemManager;
+import com.team1678.frc2021.subsystems.*;
+import com.team1678.frc2021.loops.*;
+
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -17,8 +25,24 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   public static CTREConfigs ctreConfigs;
-  private Command m_autonomousCommand;
   public RobotContainer m_robotContainer;
+  private Command m_autonomousCommand;
+
+  // loopers
+  private final Looper mEnabledLooper = new Looper();
+  private final Looper mDisabledLooper = new Looper();
+  
+  // subsystem instances
+  private final SubsystemManager mSubsystemManager = SubsystemManager.getInstance();
+  private final Canifier mCanifier = Canifier.getInstance();
+  private final Infrastructure mInfrastructure = Infrastructure.getInstance();
+  private final Pigeon mPigeon = Pigeon.getInstance();
+  private final Intake mIntake = Intake.getInstance();
+  private final Indexer mIndexer = Indexer.getInstance();
+  private final Shooter mShooter = Shooter.getInstance();
+  private final Hood mHood = Hood.getInstance();
+  private final Limelight mLimelight = Limelight.getInstance();
+
   /**
    * This function is run when the 3 is first started up and should be used for any
    * initialization code.
@@ -28,8 +52,31 @@ public class Robot extends TimedRobot {
     ctreConfigs = new CTREConfigs();
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-      // TODO: Initialise hood and do hood setpoint login in Superstructure.
-      m_robotContainer = new RobotContainer();
+    // TODO: Initialise hood and do hood setpoint login in Superstructure.
+    m_robotContainer = new RobotContainer();
+
+    try {
+      CrashTracker.logRobotInit();
+  
+      mSubsystemManager.setSubsystems(
+        mCanifier,
+        mInfrastructure,
+        mIntake,
+        mIndexer,
+        mShooter,
+        mHood,
+        mLimelight
+      );
+
+      mSubsystemManager.registerEnabledLoops(mEnabledLooper);
+      mSubsystemManager.registerDisabledLoops(mDisabledLooper);
+
+      mLimelight.setLed(Limelight.LedMode.OFF);
+
+    } catch (Throwable t) {
+      CrashTracker.logThrowableCrash(t);
+      throw t;
+    }
   }
 
   /**
@@ -50,7 +97,26 @@ public class Robot extends TimedRobot {
 
   /** This function is called once each time the 3 enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    try {
+      CrashTracker.logDisabledInit();
+      mEnabledLooper.stop();
+
+      mInfrastructure.setIsDuringAuto(true);
+
+      mDisabledLooper.start();
+
+      mLimelight.setLed(Limelight.LedMode.ON);
+      mLimelight.triggerOutputs();
+      mLimelight.writePeriodicOutputs();
+
+      mHood.setNeutralMode(NeutralMode.Coast);
+
+    } catch (Throwable t) {
+        CrashTracker.logThrowableCrash(t);
+        throw t;
+    }
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -63,6 +129,27 @@ public class Robot extends TimedRobot {
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
+    }
+
+    SmartDashboard.putString("Match Cycle", "AUTONOMOUS");
+
+    try {
+      CrashTracker.logAutoInit();
+      mDisabledLooper.stop();
+
+      mInfrastructure.setIsDuringAuto(true);
+      mHood.setNeutralMode(NeutralMode.Brake);
+      
+      mLimelight.setLed(Limelight.LedMode.ON);
+      mLimelight.setPipeline(Constants.kPortPipeline);
+
+      // RobotState.getInstance().reset(Timer.getFPGATimestamp(), Pose2d.identity());
+
+      mEnabledLooper.start();
+
+    } catch (Throwable t) {
+        CrashTracker.logThrowableCrash(t);
+        throw t;
     }
   }
 
@@ -79,6 +166,22 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+
+    try {
+      CrashTracker.logTeleopInit();
+      mDisabledLooper.stop();
+ 
+      mInfrastructure.setIsDuringAuto(false);
+
+      mEnabledLooper.start();
+      mLimelight.setLed(Limelight.LedMode.ON);
+      mLimelight.setPipeline(Constants.kPortPipeline);
+      mHood.setNeutralMode(NeutralMode.Brake);
+      
+    } catch (Throwable t) {
+        CrashTracker.logThrowableCrash(t);
+        throw t;
+    }
   }
 
   /** This function is called periodically during operator control. */
@@ -89,6 +192,20 @@ public class Robot extends TimedRobot {
   public void testInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
+
+    SmartDashboard.putString("Match Cycle", "TEST");
+
+    try {
+      System.out.println("Starting check systems.");
+
+      mDisabledLooper.stop();
+      mEnabledLooper.stop();
+
+    } catch (Throwable t) {
+        CrashTracker.logThrowableCrash(t);
+        throw t;
+    }
+
   }
 
   /** This function is called periodically during test mode. */
