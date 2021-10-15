@@ -33,6 +33,10 @@ public class Constants {
 	public static final boolean kIsUsingTractionWheels = true;
 
 	public static final boolean kDebuggingOutput = true;
+
+	// Control Board
+	public static final double kJoystickThreshold = 0.2;
+	public static final int kButtonGamepadPort = 1;
 	
 	//Physical Robot Dimensions (including bumpers)
 	public static final double kRobotWidth = 24;

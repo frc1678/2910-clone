@@ -9,11 +9,13 @@ import com.team2910.lib.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.team1678.frc2021.SubsystemManager;
 import com.team1678.frc2021.subsystems.*;
 import com.team1678.frc2021.loops.*;
+import com.team1678.frc2021.controlboard.*;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 
@@ -38,10 +40,13 @@ public class Robot extends TimedRobot {
   private final Infrastructure mInfrastructure = Infrastructure.getInstance();
   private final Pigeon mPigeon = Pigeon.getInstance();
   private final Intake mIntake = Intake.getInstance();
-  private final Indexer mIndexer = Indexer.getInstance();
+  // sprivate final Indexer mIndexer = Indexer.getInstance();
   private final Shooter mShooter = Shooter.getInstance();
   private final Hood mHood = Hood.getInstance();
   private final Limelight mLimelight = Limelight.getInstance();
+
+  // controlboard
+  private final ControlBoard mControlBoard = ControlBoard.getInstance();
 
   /**
    * This function is run when the 3 is first started up and should be used for any
@@ -61,11 +66,11 @@ public class Robot extends TimedRobot {
       mSubsystemManager.setSubsystems(
         mCanifier,
         mInfrastructure,
-        mIntake,
-        mIndexer,
-        mShooter,
-        mHood,
-        mLimelight
+        mIntake //,
+        // mIndexer,
+        // mShooter,
+        // mHood,
+        // mLimelight
       );
 
       mSubsystemManager.registerEnabledLoops(mEnabledLooper);
@@ -186,7 +191,24 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+
+    try {
+      double timestamp = Timer.getFPGATimestamp();
+      if (mControlBoard.getRunIntake()) {
+          mIntake.setState(Intake.WantedAction.INTAKE);
+      } else if (mControlBoard.getRetractIntake()) {
+          mIntake.setState(Intake.WantedAction.RETRACT);
+      } else {
+          mIntake.setState(Intake.WantedAction.NONE);
+      }
+
+    } catch (Throwable t) {
+      CrashTracker.logThrowableCrash(t);
+      throw t;
+    }
+
+  }
 
   @Override
   public void testInit() {
