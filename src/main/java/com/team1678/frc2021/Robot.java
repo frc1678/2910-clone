@@ -40,7 +40,7 @@ public class Robot extends TimedRobot {
   private final Infrastructure mInfrastructure = Infrastructure.getInstance();
   private final Pigeon mPigeon = Pigeon.getInstance();
   private final Intake mIntake = Intake.getInstance();
-  // sprivate final Indexer mIndexer = Indexer.getInstance();
+  private final Indexer mIndexer = Indexer.getInstance();
   private final Shooter mShooter = Shooter.getInstance();
   private final Hood mHood = Hood.getInstance();
   private final Limelight mLimelight = Limelight.getInstance();
@@ -66,8 +66,8 @@ public class Robot extends TimedRobot {
       mSubsystemManager.setSubsystems(
         mCanifier,
         mInfrastructure,
-        mIntake //,
-        // mIndexer,
+        mIntake,
+        mIndexer //,
         // mShooter,
         // mHood,
         // mLimelight
@@ -98,6 +98,8 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the 3's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
+    mSubsystemManager.outputToSmartDashboard();
   }
 
   /** This function is called once each time the 3 enters Disabled mode. */
@@ -195,8 +197,10 @@ public class Robot extends TimedRobot {
 
     try {
       double timestamp = Timer.getFPGATimestamp();
+
       if (mControlBoard.getRunIntake()) {
           mIntake.setState(Intake.WantedAction.INTAKE);
+          // mIndexer.setState(Indexer.WantedAction.INDEX);
       } else if (mControlBoard.getRetractIntake()) {
           mIntake.setState(Intake.WantedAction.RETRACT);
       } else {
