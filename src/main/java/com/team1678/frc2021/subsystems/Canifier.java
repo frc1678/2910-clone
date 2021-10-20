@@ -31,12 +31,12 @@ public class Canifier extends Subsystem {
         return mInstance;
     }
 
-    /**
-     * Reads the hood limit from the Periodic IO
-     * @return the hood limit
-     */
-    public synchronized boolean getHoodLimit() {
-        return mPeriodicInputs.hood_limit_;
+    public boolean getIntakeBeamBreak() {
+        return mPeriodicInputs.lower_break;
+    }
+
+    public boolean getShooterBeamBreak() {
+        return mPeriodicInputs.upper_break;
     }
 
     /**
@@ -55,9 +55,8 @@ public class Canifier extends Subsystem {
         CANifier.PinValues pins = new CANifier.PinValues();
         mCanifier.getGeneralInputs(pins);
 
-        mPeriodicInputs.indexer_limit_ = !pins.SDA;
-        mPeriodicInputs.hood_limit_ = !pins.SPI_MOSI_PWM1;
-
+        mPeriodicInputs.lower_break = !pins.SPI_MOSI_PWM1;
+        mPeriodicInputs.upper_break = !pins.SPI_CLK_PWM0;
     }
 
     /**
@@ -107,7 +106,7 @@ public class Canifier extends Subsystem {
      * The periodic inputs into the canifier
      */
     private static class PeriodicInputs {
-        public boolean indexer_limit_;
-        public boolean hood_limit_;
+        public boolean lower_break;
+        public boolean upper_break;
     }
 }

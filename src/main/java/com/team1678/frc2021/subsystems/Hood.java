@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.subsystems.Canifier;
+import com.team1678.lib.math.Conversions;
 import com.team254.lib.drivers.MotorChecker;
 import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import com.team254.lib.drivers.BaseTalonChecker;
@@ -21,9 +22,10 @@ import edu.wpi.first.wpilibj.AnalogEncoder;
 import java.util.ArrayList;
 
 public class Hood extends ServoMotorSubsystem {
-    private AnalogEncoder mEncoder;
     private static Hood mInstance;
-    private boolean mHoming = true;
+
+    private AnalogEncoder mEncoder;
+    private final double kHoodEncoderStartingPos = 0.0;
 
     public synchronized static Hood getInstance() {
         if (mInstance == null) {
@@ -34,18 +36,8 @@ public class Hood extends ServoMotorSubsystem {
 
     private Hood(final ServoMotorSubsystemConstants constants) {
         super(constants);
+        // mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
         mEncoder = new AnalogEncoder(Constants.kHoodConstants.kAbsoluteEncoderID);
-        //mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
-    }
-
-    /*
-    @Override
-    public synchronized boolean atHomingLocation() {
-        return Canifier.getInstance().getHoodLimit();
-    }*/
-
-    public synchronized boolean isHoming() {
-        return mHoming;
     }
 
     public synchronized double getAngle() {
@@ -60,34 +52,19 @@ public class Hood extends ServoMotorSubsystem {
         return Util.epsilonEquals(getAngle(), Constants.kHoodConstants.kMinUnitsLimit, 5.0);
     }
 
+    private void getHoodReset() {
+        int absolutePosition = (int) kHoodEncoderStartingPos;
+        mMaster.setSelectedSensorPosition(absolutePosition);
+    }
+
     @Override
     public synchronized void writePeriodicOutputs() {
-        if (mHoming) {
-            if (mControlState == ControlState.OPEN_LOOP) {
-                mMaster.set(ControlMode.PercentOutput, 0.0, DemandType.ArbitraryFeedForward, 0.0);
-            } else {
-                mMaster.set(ControlMode.PercentOutput, 0.0, DemandType.ArbitraryFeedForward, 0.0);
-            }
-        } else {
-            super.writePeriodicOutputs();
-        }
+        super.writePeriodicOutputs();
     }
 
     @Override
     public synchronized void readPeriodicInputs() {
-        if (mHoming) {
-            System.out.println("is homing");
-            mEncoder.reset();
-            // Motor to encoder
-
-            //mMaster.setSelectedSensorPosition(mEncoder.getDistance());
-            //mMaster.setSelectedSensorPosition((int) unitsToTicks(17.66));
-
-            //mMaster.overrideSoftLimitsEnable(true);
-            System.out.println("Homed!!!");
-            mHoming = false;
-        }
-        SmartDashboard.putNumber("Hood Encoder Readout", mEncoder.getDistance());
+        SmartDashboard.putNumber("Hood Encoder Position", mEncoder.getDistance());
         super.readPeriodicInputs();
     }
 
@@ -112,12 +89,11 @@ public class Hood extends ServoMotorSubsystem {
         });
     }
 
+    
+
     @Override
     public void outputTelemetry() {
         super.outputTelemetry();
-
-        SmartDashboard.putBoolean(mConstants.kName + " Calibrated", !mHoming);
-        SmartDashboard.putBoolean("Hood at Homing Location", atHomingLocation());
     }
 
     public void setCoastMode() {

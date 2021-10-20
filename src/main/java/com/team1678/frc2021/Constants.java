@@ -58,7 +58,6 @@ public class Constants {
 	public static final double kDriveTranslationKi = 0.0;
 	public static final double kDriveTranslationKd = 0.0;
 	
-
 	 // Indexer
 	 public static final int kLowerBeamBreak = 1;      // TODO Find actual port
 	 public static final int kUpperBeamBreak = 2;      // TODO Find actual port
@@ -89,7 +88,7 @@ public class Constants {
 	// shooter
 	public static final int kMasterFlywheelID = 2;
 	public static final int kSlaveFlywheelID = 15;
-	public static final int kOverheadFlywheelID = 16;
+	public static final int kHoodRollerID = 16;
 	public static final double kShooterP = 0.2;
 	public static final double kShooterI = 0.00004;
 	public static final double kShooterD = 0.0;

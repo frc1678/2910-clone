@@ -21,8 +21,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Indexer extends Subsystem {
 
-    // Intake Instance
+    // Required Instances
     private final Intake mIntake = Intake.getInstance();
+    private final Canifier mCanifier = Canifier.getInstance();    
 
     // Variable Declarations
     private static Indexer mInstance = null;
@@ -31,8 +32,8 @@ public class Indexer extends Subsystem {
     private final TalonFX mMaster;
 
     // Slot Proxies
-    private final DigitalInput mLowerBeamBreak = new DigitalInput(Constants.kLowerBeamBreak);
-    private final DigitalInput mUpperBeamBreak = new DigitalInput(Constants.kUpperBeamBreak);
+    // private final DigitalInput mLowerBeamBreak = new DigitalInput(Constants.kLowerBeamBreak);
+    // private final DigitalInput mUpperBeamBreak = new DigitalInput(Constants.kUpperBeamBreak);
 
     // Intake Proxy Timer
     private TimeDelayedBoolean mIntakeProxyTimer = new TimeDelayedBoolean();  
@@ -78,7 +79,7 @@ public class Indexer extends Subsystem {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kIndexerId);
 
         mMaster.set(ControlMode.PercentOutput, 0);
-        mMaster.setInverted(false);
+        mMaster.setInverted(true);
         mMaster.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMaster.enableVoltageCompensation(true);
     }
@@ -151,8 +152,8 @@ public class Indexer extends Subsystem {
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
         mPeriodicIO.current = mMaster.getStatorCurrent();
-        mPeriodicIO.lower_break = mIntakeProxyTimer.update(mLowerBeamBreak.get(), 0.2);
-        mPeriodicIO.upper_break = mUpperBeamBreak.get();
+        mPeriodicIO.lower_break = mIntakeProxyTimer.update(mCanifier.getIntakeBeamBreak(), 0.2);
+        mPeriodicIO.upper_break = mCanifier.getShooterBeamBreak();
     }
 
     private boolean indexNextBall() {
@@ -178,12 +179,12 @@ public class Indexer extends Subsystem {
                 break;
             // Indexing, pushing balls to the shooter
             case INDEXING:
-            
-                if (indexNextBall()) {
+
+                // if (indexNextBall()) {
                     mPeriodicIO.demand = kFeedingVoltage;
-                } else {
-                    mPeriodicIO.demand = kIdleVoltage;
-                }
+                // } else {
+                //     mPeriodicIO.demand = kIdleVoltage;
+                // }
 
                 break;
             // Feeding, pushing balls for shooting into the shooter
@@ -249,5 +250,6 @@ public class Indexer extends Subsystem {
     public void outputTelemetry() {
         SmartDashboard.putBoolean("Lower Break", mPeriodicIO.lower_break);
         SmartDashboard.putBoolean("Upper Break", mPeriodicIO.upper_break);
+        SmartDashboard.putNumber("Indexer Current", mPeriodicIO.current);
     }
 }
