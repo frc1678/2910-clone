@@ -173,6 +173,8 @@ public class Intake extends Subsystem {
     public synchronized void outputTelemetry() {
         SmartDashboard.putNumber("Intake Current", mPeriodicIO.current);
         SmartDashboard.putString("Intake State", mState.toString());
+        SmartDashboard.putBoolean("Intake Deploy Goal", mPeriodicIO.deploy);
+        SmartDashboard.putBoolean("Intake Deploy Actual", mPeriodicIO.intake_out);
         if (mCSVWriter != null) {
             mCSVWriter.write();
         }
