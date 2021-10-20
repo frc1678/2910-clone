@@ -1,6 +1,7 @@
 package com.team1678.frc2021.subsystems;
 
 import java.nio.channels.ReadPendingException;
+import java.time.zone.ZoneOffsetTransitionRule.TimeDefinition;
 import java.util.Arrays;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -12,6 +13,7 @@ import com.team1678.frc2021.loops.ILooper;
 import com.team1678.frc2021.loops.Loop;
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team1678.frc2021.planners.IndexerMotionPlanner;
+import com.team1678.lib.util.TimeDelayedBoolean;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
@@ -32,6 +34,9 @@ public class Indexer extends Subsystem {
     private final DigitalInput mLowerBeamBreak = new DigitalInput(Constants.kLowerBeamBreak);
     private final DigitalInput mUpperBeamBreak = new DigitalInput(Constants.kUpperBeamBreak);
 
+    // Intake Proxy Timer
+    private TimeDelayedBoolean mIntakeProxyTimer = new TimeDelayedBoolean();  
+
     private static double kIdleVoltage = 0.0;
     private static double kIndexingVoltage = 9.0;
     private static double kFeedingVoltage = 12.0;
@@ -40,6 +45,17 @@ public class Indexer extends Subsystem {
     private static double mLastTimestamp = 0.0;
     private static double mLastLowerBeamBreak = 0.0;
     private static boolean mSeenBall = false;
+
+    /**
+     * Gets the instant of the Indexer
+     * @return Indexer Instance
+     */
+    public static synchronized Indexer getInstance() {
+        if (mInstance == null) {
+            mInstance = new Indexer();
+        }
+        return mInstance;
+    }
 
     // Declare States and Wanted Actions
     public enum WantedAction {
@@ -68,51 +84,6 @@ public class Indexer extends Subsystem {
     }
 
     /**
-     * Runs the state machine for the Indexer
-     */
-    public void runStateMachine() {
-        switch (mState) {
-            // Idling
-            case IDLE:
-                mPeriodicIO.demand = kIdleVoltage;
-
-                if (mIntake.getState() == Intake.State.INTAKING) {
-                    mState = State.INDEXING;
-                }
-                break;
-            // Indexing, pushing balls to the shooter
-            case INDEXING:
-            
-                /*
-                if (mPeriodicIO.upper_break) {
-                    mInstance.setState(Indexer.WantedAction.NONE);
-                }
-
-                if (mPeriodicIO.lower_break) {
-                    mLastLowerBeamBreak = mPeriodicIO.timestamp;
-                    mSeenBall = true;
-                }
-
-                while (mPeriodicIO.timestamp - mLastLowerBeamBreak <= kIndexTime && mSeenBall) {
-                    mPeriodicIO.demand = kIndexingVoltage;
-                }
-                mSeenBall = false;
-                */
-
-                mPeriodicIO.demand = kIndexingVoltage;
-
-                break;
-            // Feeding, pushing balls for shooting into the shooter
-            case FEEDING:
-                mPeriodicIO.demand = kFeedingVoltage;
-                break;
-            default:
-                System.out.println("Fell through on Indexer states!");
-        }
-
-    }
-
-    /**
      * Sets the states based on Wanted Actions
      * @param wanted_state the Wanted Action Enum
      */
@@ -138,27 +109,7 @@ public class Indexer extends Subsystem {
      */
     public synchronized State getState() {
         return mState;
-    }
-
-    /**
-     * Gets the instant of the Indexer
-     * @return Indexer Instance
-     */
-    public static synchronized Indexer getInstance() {
-        if (mInstance == null) {
-            mInstance = new Indexer();
-        }
-        return mInstance;
-    }
-
-    /**
-     * Sets the Indexer output to the Smart Dashboard on the Driverstation
-     */
-    @Override
-    public void outputTelemetry() {
-        SmartDashboard.putBoolean("Lower Break", mPeriodicIO.lower_break);
-        SmartDashboard.putBoolean("Upper Break", mPeriodicIO.upper_break);
-    }
+    } 
 
     /**
      * Sets the percentage for the open loop
@@ -194,6 +145,58 @@ public class Indexer extends Subsystem {
     }
 
     /**
+     * Sets the periodic inputs for the Indexer
+     */
+    @Override
+    public synchronized void readPeriodicInputs() {
+        mPeriodicIO.timestamp = Timer.getFPGATimestamp();
+        mPeriodicIO.current = mMaster.getStatorCurrent();
+        mPeriodicIO.lower_break = mIntakeProxyTimer.update(mLowerBeamBreak.get(), 0.2);
+        mPeriodicIO.upper_break = mUpperBeamBreak.get();
+    }
+
+    private boolean indexNextBall() {
+        if (!mPeriodicIO.upper_break && mPeriodicIO.lower_break) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Runs the state machine for the Indexer
+     */
+    public void runStateMachine() {
+        switch (mState) {
+            // Idling
+            case IDLE:
+                mPeriodicIO.demand = kIdleVoltage;
+
+                if (mIntake.getState() == Intake.State.INTAKING) {
+                    mState = State.INDEXING;
+                }
+                break;
+            // Indexing, pushing balls to the shooter
+            case INDEXING:
+            
+                if (indexNextBall()) {
+                    mPeriodicIO.demand = kFeedingVoltage;
+                } else {
+                    mPeriodicIO.demand = kIdleVoltage;
+                }
+
+                break;
+            // Feeding, pushing balls for shooting into the shooter
+            case FEEDING:
+                mPeriodicIO.demand = kFeedingVoltage;
+                break;
+            default:
+                System.out.println("Fell through on Indexer states!");
+        }
+
+    }
+
+    /**
      * Registers the enabled loops
      * @param enabledLooper the enabled ILooper
      */
@@ -218,18 +221,6 @@ public class Indexer extends Subsystem {
             }
         });
     }
-
-    /**
-     * Sets the periodic inputs for the Indexer
-     */
-    @Override
-    public synchronized void readPeriodicInputs() {
-        mPeriodicIO.timestamp = Timer.getFPGATimestamp();
-        mPeriodicIO.current = mMaster.getStatorCurrent();
-        mPeriodicIO.lower_break = mLowerBeamBreak.get();
-        mPeriodicIO.upper_break = mUpperBeamBreak.get();
-    }
-
     
     @Override
     public void writePeriodicOutputs() {
@@ -249,5 +240,14 @@ public class Indexer extends Subsystem {
 
         // OUTPUTS
         public double demand;
+    }
+
+    /**
+     * Sets the Indexer output to the Smart Dashboard on the Driverstation
+     */
+    @Override
+    public void outputTelemetry() {
+        SmartDashboard.putBoolean("Lower Break", mPeriodicIO.lower_break);
+        SmartDashboard.putBoolean("Upper Break", mPeriodicIO.upper_break);
     }
 }
