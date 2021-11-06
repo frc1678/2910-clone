@@ -115,6 +115,10 @@ public class Hood extends Subsystem {
         mRunningManual = true;
     }
 
+    public void setNeutralMode(NeutralMode mode) {
+        mMaster.setNeutralMode(mode);
+    }
+
     @Override
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
@@ -185,6 +189,13 @@ public class Hood extends Subsystem {
         if (mCSVWriter != null) {
             mCSVWriter.write();
         }
+    }
+
+    public static Hood getInstance() {
+        if (mInstance == null) {
+            mInstance = new Hood();
+        }
+        return mInstance;
     }
 
     public static class PeriodicIO {
