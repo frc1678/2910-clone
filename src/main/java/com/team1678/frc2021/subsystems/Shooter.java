@@ -6,6 +6,7 @@ import com.team1678.frc2021.loops.Loop;
 import com.team254.lib.util.ReflectingCSVWriter;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
@@ -177,7 +178,7 @@ public class Shooter extends Subsystem {
 
     public synchronized void setVelocity(double velocity) {
         mPeriodicIO.flywheel_demand = velocity;
-        mPeriodicIO.overhead_demand = velocity;
+        mPeriodicIO.overhead_demand = -velocity; // must be reverse of lower flywheel
         mRunningManual = false;
     }
 
@@ -203,8 +204,8 @@ public class Shooter extends Subsystem {
     @Override
     public void writePeriodicOutputs() {
         if (!mRunningManual) {
-            mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion);
-            mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion);
+            mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterFlywheel_ff_v);
+            mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterOverhead_ff_v);
         } else {
             mMaster.set(ControlMode.PercentOutput, 0);
         }
