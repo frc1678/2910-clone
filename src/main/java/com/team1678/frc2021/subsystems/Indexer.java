@@ -60,11 +60,11 @@ public class Indexer extends Subsystem {
 
     // Declare States and Wanted Actions
     public enum WantedAction {
-        NONE, INDEX, FEED,
+        NONE, INDEX, FEED, REVERSE,
     }
 
     public enum State {
-        IDLE, INDEXING, FEEDING,
+        IDLE, INDEXING, FEEDING, REVERSING,
     }
 
     private State mState = State.IDLE;
@@ -101,6 +101,8 @@ public class Indexer extends Subsystem {
             case FEED:
                 mState = State.FEEDING;
                 break;
+            case REVERSE:
+                mState = State.REVERSING;
         }
     }
 
@@ -156,11 +158,19 @@ public class Indexer extends Subsystem {
         mPeriodicIO.upper_break = mCanifier.getShooterBeamBreak();
     }
 
+    private boolean indexerIsFull() {
+        return mPeriodicIO.upper_break;
+    }
+
+    private boolean ballAtIndexer() {
+        return mPeriodicIO.lower_break;
+    }
+
     private boolean indexNextBall() {
-        if (!mPeriodicIO.upper_break && mPeriodicIO.lower_break) {
-            return true;
-        } else {
+        if (indexerIsFull()) {
             return false;
+        } else {
+            return ballAtIndexer();
         }
     }
 
@@ -174,18 +184,13 @@ public class Indexer extends Subsystem {
                 mPeriodicIO.demand = kIdleVoltage;
 
                 if (mIntake.getState() == Intake.State.INTAKING) {
-                    mState = State.INDEXING;
+                    mInstance.setState(WantedAction.INDEX);
                 }
                 break;
             // Indexing, pushing balls to the shooter
             case INDEXING:
-
-                // if (indexNextBall()) {
-                    mPeriodicIO.demand = kFeedingVoltage;
-                // } else {
-                //     mPeriodicIO.demand = kIdleVoltage;
-                // }
-
+                mPeriodicIO.demand = kIndexingVoltage;
+                // mPeriodicIO.demand = indexNextBall() ? kIndexingVoltage : kIdleVoltage;
                 break;
             // Feeding, pushing balls for shooting into the shooter
             case FEEDING:
@@ -248,8 +253,8 @@ public class Indexer extends Subsystem {
      */
     @Override
     public void outputTelemetry() {
-        SmartDashboard.putBoolean("Lower Break", mPeriodicIO.lower_break);
-        SmartDashboard.putBoolean("Upper Break", mPeriodicIO.upper_break);
+        SmartDashboard.putBoolean("Indexer is Full", indexerIsFull());
+        SmartDashboard.putBoolean("Ball in Intake", ballAtIndexer());
         SmartDashboard.putNumber("Indexer Current", mPeriodicIO.current);
     }
 }
