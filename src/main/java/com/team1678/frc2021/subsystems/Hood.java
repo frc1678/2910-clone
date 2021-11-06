@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.MecanumControllerCommand;
 
 import com.team254.lib.drivers.TalonFXFactory;
 import com.team254.lib.util.Util;
@@ -40,10 +41,10 @@ public class Hood extends Subsystem {
     private boolean mRunningManual = false;
 
     // Hood PID Controller
-    private final PidController mHoodController = new PidController(new PidConstants(4.0, 0.0, 0.0));
+    private final PidController mHoodController = new PidController(new PidConstants(0.020, 0.0, 0.001));
 
     private void resetHoodToAbsolute() {
-        double absolute_position = getHoodDegreesToTicks(getHoodAngle());
+        double absolute_position = getHoodDegreesToTicks(getTicksToHoodDegrees(mEncoder.getDistance()) - (Constants.kHoodEncoderOffset - Constants.kHoodMinLimit));
         mMaster.setSelectedSensorPosition(absolute_position);
     }
 
@@ -72,9 +73,8 @@ public class Hood extends Subsystem {
 
         // config encoder
         mEncoder = new AnalogEncoder(Constants.kHoodAbsoluteEncoderID);
+        mEncoder.setDistancePerRotation(33800); // ticks per rotation
 
-        // set hood falcon position to absolute encoder reset position
-        resetHoodToAbsolute();
     }
 
     public synchronized static Hood mInstance() {
@@ -99,6 +99,9 @@ public class Hood extends Subsystem {
             @Override
             public void onStart(double timestamp) {
                 // startLogging();
+                
+                // set hood falcon position to absolute encoder reset position
+                resetHoodToAbsolute();
             }
             @Override
             public void onLoop(double timestamp) {
@@ -125,7 +128,7 @@ public class Hood extends Subsystem {
 
         mPeriodicIO.encoder_position = mEncoder.getDistance();
         mPeriodicIO.motor_position = mMaster.getSelectedSensorPosition();
-        mPeriodicIO.hood_angle = getHoodAngle();
+        mPeriodicIO.hood_angle = getHoodEncoderPosition();
         
         if (mCSVWriter != null) {
             mCSVWriter.add(mPeriodicIO);
@@ -141,8 +144,12 @@ public class Hood extends Subsystem {
         return degrees * Constants.kHoodGearRatio;
     }
 
+    public synchronized double getHoodEncoderPosition() {
+        return getTicksToHoodDegrees(mPeriodicIO.encoder_position);
+    }
+
     public synchronized double getHoodAngle() {
-        return getTicksToHoodDegrees(mPeriodicIO.encoder_position) - Constants.kHoodEncoderOffset;
+        return getTicksToHoodDegrees(mPeriodicIO.motor_position);
     }
 
     public void setHoodTargetAngle(double setpoint_angle) {
@@ -181,6 +188,7 @@ public class Hood extends Subsystem {
     @Override
     public synchronized void outputTelemetry() {
         SmartDashboard.putNumber("Hood Encoder Position (ticks)", mPeriodicIO.encoder_position);
+        SmartDashboard.putNumber("Hood Encoder Position (degrees)", getHoodEncoderPosition());
         SmartDashboard.putNumber("Hood Motor Position (ticks)", mPeriodicIO.motor_position);
         SmartDashboard.putNumber("Hood Motor Position (degrees)", mPeriodicIO.motor_position / Constants.kHoodGearRatio);
         SmartDashboard.putNumber("Hood Angle", getHoodAngle());

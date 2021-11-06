@@ -99,20 +99,20 @@ public class Constants {
 	public static final double kTriggerF = 0.05;
 	public static final double kTriggerRPM = 5000.0;
 
-	public static final double kShooterFlywheel_ff_v = 0.469; // TODO: Test to find real value
-	public static final double kShooterOverhead_ff_v = 0.469; // TODO: Test to find real value
+	public static final double kShooterFlywheel_ff_v = 0.0; // TODO: Test to find real value
+	public static final double kShooterOverhead_ff_v = 0.0; // TODO: Test to find real value
 
 	// hood
 	public static final int kHoodID = 6;
 	public static final int kHoodAbsoluteEncoderID = 3;
-	public static final int kHoodEncoderOffset = 0; // TODO: Find real value
-	public static final boolean kHoodInvertMotor = true;
-	public static final double kHoodGearRatio = (2048.0 * 93.8) / 360.0;
+	public static final double kHoodEncoderOffset = 35.45; //  17122 ticks // 35.45; // degrees
+	public static final boolean kHoodInvertMotor = false;
+	public static final double kHoodGearRatio = (2048.0 * 85.3) / 360.0;
 	public static final double kHoodP = 0.25;
 	public static final double kHoodI = 0.0;
 	public static final double kHoodD = 0.0;
-	public static final double kHoodMinLimit = 26.9; // TODO: Check value with absolute encoder
-	public static final double kHoodMaxLimit = 64.54; // TODO: Check value with absolute encoder
+	public static final double kHoodMinLimit = 15.00; // TODO: Check value with absolute encoder
+	public static final double kHoodMaxLimit = 80.00; // TODO: Check value with absolute encoder
 
 	// limelight
 	 public static final LimelightConstants kLimelightConstants = new LimelightConstants();
@@ -199,7 +199,8 @@ public class Constants {
 
 	public static int kMasterIntakeRollerId = 5;
 	public static int kSlaverIntakeRollerId = 11; //TODO Check real ID
-	public static int kDeploySolenoidId = 4;
+	public static int kDeployOutSolenoidId = 7;
+	public static int kDeployInSolenoidId = 0;
 	public static int kShiftSolenoidId = 5;
 	public static int kDeployId = 31;
 
@@ -215,12 +216,6 @@ public class Constants {
 	
 	public static final int kBackRightRotationId = 12;
 	public static final int kBackRightDriveId = 16;
-
-	// Absolute Encoders (CANCoder)
-	public static final int kFrontRightEncoderId = 0;
-	public static final int kFrontLeftEncoderId = 1;
-	public static final int kBackLeftEncoderId = 2;
-	public static final int kBackRightEncoderId = 3;
 
 	// Intake
 	public static final int kClimbSolenoidId = 5;
@@ -352,9 +347,9 @@ public class Constants {
         public static final double angleKF = 0.0;
 
         /* Drive Motor PID Values */
-        public static final double driveKP = 0.05;
+        public static final double driveKP = 0.5;
         public static final double driveKI = 0.0;
-        public static final double driveKD = 0.0;
+        public static final double driveKD = 0.0001;
         public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values */

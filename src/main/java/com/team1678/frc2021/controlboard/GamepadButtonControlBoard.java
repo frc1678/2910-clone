@@ -58,11 +58,10 @@ public class GamepadButtonControlBoard {
         mController.setRumble(on);
     }
 
-    /*
     public boolean getSpinUp() {
-        return mController.getController().getAButtonPressed();
+        return false;
+        // return mController.getController().getAButtonPressed();
     }
-    */
 
     public boolean getTuck() {
         return mController.getButton(Button.X);
@@ -90,8 +89,12 @@ public class GamepadButtonControlBoard {
         return mController.getTrigger(Side.RIGHT);
     }
 
-    public boolean getRetractIntake() {
+    public boolean getReverseIntake() {
         return mController.getTrigger(Side.LEFT);
+    }
+
+    public boolean getRetractIntake() {
+        return mController.getController().getBumper(Hand.kLeft);
     }
 
 }
