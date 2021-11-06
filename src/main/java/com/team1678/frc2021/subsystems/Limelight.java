@@ -12,15 +12,19 @@ import com.team254.lib.geometry.Translation2d;
 import com.team254.lib.util.ReflectingCSVWriter;
 import com.team254.lib.util.Util;
 import com.team254.lib.vision.TargetInfo;
+import com.team2910.lib.math.Vector2;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * Subsystem for interacting with the Limelight 2
@@ -36,11 +40,11 @@ public class Limelight extends Subsystem {
     private int mLatencyCounter = 0;
 
     public static class LimelightConstants {
-        public String kName = "";
-        public String kTableName = "";
-        public double kHeight = 0.0;
-        public Pose2d kTurretToLens = Pose2d.identity();
-        public Rotation2d kHorizontalPlaneToLens = Rotation2d.identity();
+        public String kName;
+        public String kTableName;
+        public double kHeight;
+        public Pose2d kTurretToLens;
+        public Rotation2d kHorizontalPlaneToLens;
     }
 
     private NetworkTable mNetworkTable;
@@ -69,6 +73,7 @@ public class Limelight extends Subsystem {
             @Override
             public void onLoop(double timestamp) {
                 synchronized (this) {
+                    periodic();
                     // if ((Hood.getInstance().getAtGoal() || Superstructure.getInstance().getScanningHood())
                     //         && !Superstructure.getInstance().getTucked() && !Superstructure.getInstance().getWantSpit()
                     //         && mPeriodicIO.has_comms && !Superstructure.getInstance().getDisableLimelight()) {
@@ -103,6 +108,9 @@ public class Limelight extends Subsystem {
         public double yOffset;
         public double area;
         public boolean has_comms;
+        public OptionalDouble distanceToTarget;
+        public OptionalDouble angleToTarget;
+        public boolean innerTargetVisible;
 
         // OUTPUTS
         public int ledMode = 1; // 0 - use pipeline mode, 1 - off, 2 - blink, 3 - on
@@ -118,6 +126,7 @@ public class Limelight extends Subsystem {
     private double[] mZeroArray = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     private List<TargetInfo> mTargets = new ArrayList<>();
     private boolean mSeesTarget = false;
+    private boolean innerTargetVisible = false;
 
     public Pose2d getTurretToLens() {
         return mConstants.kTurretToLens;
@@ -129,6 +138,49 @@ public class Limelight extends Subsystem {
 
     public Rotation2d getHorizontalPlaneToLens() {
         return mConstants.kHorizontalPlaneToLens;
+    }
+
+    private void periodic() {
+
+         if (mSeesTarget) {
+             // Calculate the distance to the outer target
+             Vector2 targetPosition = getTargetPosition();
+             double theta = getHorizontalPlaneToLens().getRadians() + targetPosition.y;
+             double distanceToOuterTarget = (Constants.TARGET_HEIGHT - Constants.LIMELIGHT_HEIGHT) / Math.tan(theta);
+ 
+             // Get the field oriented angle for the outer target, with *no* latency compensation
+             double angleToOuter = Swerve.getInstance().getPose().getRotation().getRadians() - targetPosition.x;
+             double dYOuter = distanceToOuterTarget * Math.sin(angleToOuter);
+             double dXOuter = distanceToOuterTarget * Math.cos(angleToOuter);
+
+             // Calculate the distance to the inner target
+             double dXInner = dXOuter + Constants.kInnerGoalDepth;
+             double distanceToInnerTarget = Math.hypot(dXInner, dYOuter);
+             // Add DISTANCE_FROM_INNER_TO_APEX to dXInner here because we want if we did it when we defined dXInner
+             // distanceToInnerTarget would be incorrect, and we only need this extra bit to determine if we can see
+             // the inner target
+             double angleToApex = Math.atan(dYOuter / (dXInner + Constants.kInnerGoalToApex));
+             if (angleToApex < 0.0) {
+                 angleToApex += 2 * Math.PI;
+             }
+             double angleToInner = Math.atan(dYOuter / dXInner);
+             if (angleToInner < 0.0) {
+                 angleToInner += 2 * Math.PI;
+             }
+ 
+             // Check whether we can see the inner target
+             innerTargetVisible = angleToApex <= Constants.kInnerTargetRangeAngle || angleToApex >= 2 * Math.PI - Constants.kInnerTargetRangeAngle;
+             if (innerTargetVisible) {
+                 mPeriodicIO.distanceToTarget = OptionalDouble.of(distanceToInnerTarget);
+             } else {
+                 mPeriodicIO.distanceToTarget = OptionalDouble.of(distanceToOuterTarget);
+             }
+             mPeriodicIO.angleToTarget = OptionalDouble.of(angleToOuter);
+         } else {
+             mPeriodicIO.distanceToTarget = OptionalDouble.empty();
+             mPeriodicIO.angleToTarget = OptionalDouble.empty();
+             innerTargetVisible = false;
+         }
     }
 
     @Override
@@ -226,6 +278,10 @@ public class Limelight extends Subsystem {
         }
     }
 
+    public synchronized void setCamMode(int mode) {
+        mPeriodicIO.camMode = mode;
+    }
+
     public synchronized void triggerOutputs() {
         mOutputsHaveChanged = true;
     }
@@ -236,6 +292,18 @@ public class Limelight extends Subsystem {
 
     public synchronized boolean seesTarget() {
         return mSeesTarget;
+    }
+
+    public synchronized Vector2 getTargetPosition() {
+        return new Vector2(Math.toRadians(mPeriodicIO.xOffset), Math.toRadians(mPeriodicIO.yOffset));
+    }
+
+    public synchronized OptionalDouble getTargetDistance(){
+        return mPeriodicIO.distanceToTarget;
+    }
+
+    public synchronized OptionalDouble getTargetAngle(){
+        return mPeriodicIO.angleToTarget;
     }
 
     /**

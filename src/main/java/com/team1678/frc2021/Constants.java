@@ -121,7 +121,7 @@ public class Constants {
 		 kLimelightConstants.kTableName = "limelight";
 		 kLimelightConstants.kHeight = 24.5; // inches
 		 kLimelightConstants.kTurretToLens = Pose2d.identity();
-		 kLimelightConstants.kHorizontalPlaneToLens = Rotation2d.fromDegrees(0.0);
+		 kLimelightConstants.kHorizontalPlaneToLens = Rotation2d.fromRadians(34.0);
 	 }
 
 	 public static final double kHorizontalFOV = 59.6; // degrees
@@ -142,13 +142,19 @@ public class Constants {
 	 public static final double kCameraFrameRate = 90.0;
 	 public static final double kMinStability = 0.5;
 	 public static final int kPortPipeline = 0;
-	 public static final double kGoalHeight = 90.0;
 
-	 public static final double kInnerGoalDepth = 0;
+	 public static final double kGoalHeight = 90.0;
+	 public static final double kInnerGoalDepth = 29.25;
+	 public static final double kInnerGoalToApex = 16.92;
+	 public static final double kInnerTargetRangeAngle = Math.toRadians(10.0); 
+
+
+	 public static final double TARGET_HEIGHT = 98.25;
+	 public static final double LIMELIGHT_HEIGHT = 24.1;
+
 	 public static final double kHoodToTurret = 4.25; // center of the turret to the axis of rotation of the hood
 	 public static final double kLimelightPitchOffset = 17.66; // limelight pitch at hood 0
 	 public static final double kAutoAimPredictionTime = 4.0; // lookahead for robot state during aiming
-
 
 	public static final Vector2 kVehicleToTurretTranslation = new Vector2(3.75, 0);
 

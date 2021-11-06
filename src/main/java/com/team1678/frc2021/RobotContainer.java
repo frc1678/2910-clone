@@ -4,11 +4,11 @@
 
 package com.team1678.frc2021;
 
-import com.team1678.frc2021.commands.TeleopSwerve;
 import com.team1678.frc2021.subsystems.Swerve;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
@@ -39,6 +39,7 @@ public class RobotContainer {
   private final Button bButton = new JoystickButton(driver, XboxController.Button.kB.value);
   private final Button aButton = new JoystickButton(driver, XboxController.Button.kA.value);
   private final Button xButton = new JoystickButton(driver, XboxController.Button.kX.value);
+  private final Button rightBumber = new JoystickButton(driver, XboxController.Button.kBumperRight.value);
 
   /* Subsystems */
   private final Swerve s_Swerve = new Swerve();
@@ -70,7 +71,9 @@ public class RobotContainer {
     yButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(0)));
     bButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(90)));
     aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
-    xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270)));    
+    xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270))); 
+    
+    rightBumber.whenPressed(new VisionRotateToTargetCommand(s_Swerve, Limelight.getInstance(), () ->  translationAxis, () -> strafeAxis));
   }
 
   /**

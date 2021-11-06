@@ -51,10 +51,6 @@ public class ControlBoard {
         return mButtonControlBoard.getPreShot();
     }
 
-    public boolean getSpinUp() {
-        return mButtonControlBoard.getSpinUp();
-    }
-
     public boolean getTuck() {
         return mButtonControlBoard.getTuck() /*|| mDriveControlBoard.getTuck()*/;
     }
