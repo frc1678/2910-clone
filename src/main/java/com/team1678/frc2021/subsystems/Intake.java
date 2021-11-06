@@ -26,14 +26,15 @@ public class Intake extends Subsystem {
     private static Intake mInstance;
     private TimeDelayedBoolean mIntakeSolenoidTimer = new TimeDelayedBoolean();
 
-    private Solenoid mDeploySolenoid;
+    private Solenoid mDeployOut;
+    private Solenoid mDeployIn;
 
     public enum WantedAction {
-        NONE, INTAKE, RETRACT, STAY_OUT, 
+        NONE, INTAKE, REVERSE, RETRACT,
     }
 
     public enum State {
-        IDLE, INTAKING, RETRACTING, STAYING_OUT,
+        IDLE, INTAKING, REVERSING, RETRACTING,
     }
 
     private State mState = State.IDLE;
@@ -46,7 +47,8 @@ public class Intake extends Subsystem {
 
     private Intake() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterIntakeRollerId);
-        mDeploySolenoid = Constants.makeSolenoidForId(Constants.kDeploySolenoidId);
+        mDeployOut = Constants.makeSolenoidForId(Constants.kDeployOutSolenoidId);
+        mDeployIn = Constants.makeSolenoidForId(Constants.kDeployInSolenoidId);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaverIntakeRollerId, Constants.kMasterIntakeRollerId);
         mSlave.setInverted(true);
     }
@@ -94,30 +96,24 @@ public class Intake extends Subsystem {
 
     public void runStateMachine() {
         switch (mState) {
-        case INTAKING:
-            if (mPeriodicIO.intake_out) {    
-                mPeriodicIO.demand = kIntakingVoltage;
-            } else {
-                mPeriodicIO.demand = 0.0;
-            }
-            mPeriodicIO.deploy = true;
-            break;
-        case RETRACTING:
-            if (mPeriodicIO.intake_out) {    
-                mPeriodicIO.demand = -kIntakingVoltage;
-            } else {
-                mPeriodicIO.demand = 0.0;
-            }
-            mPeriodicIO.deploy = true;
-            break;
         case IDLE:
             mPeriodicIO.demand = kIdleVoltage;
-            mPeriodicIO.deploy = false;
             break;
-        case STAYING_OUT:
-            mPeriodicIO.demand = 0;
-            mPeriodicIO.deploy = true;
+        case INTAKING:
+            mPeriodicIO.demand = kIntakingVoltage;
+            mPeriodicIO.deploy_out = true;
+            mPeriodicIO.deploy_in = false;
             break;
+        case REVERSING:
+            mPeriodicIO.demand = -kIntakingVoltage;
+            break;
+        case RETRACTING:
+            mPeriodicIO.demand = kIdleVoltage;
+            mPeriodicIO.deploy_out = false;
+            mPeriodicIO.deploy_in = true;
+            break;
+        default:
+            System.out.println("Fell through on Intake states!");
         }
     }
 
@@ -145,18 +141,19 @@ public class Intake extends Subsystem {
         case INTAKE:
             mState = State.INTAKING;
             break;
+        case REVERSE:
+            mState = State.REVERSING;
+            break;
         case RETRACT:
             mState = State.RETRACTING;
             break;
-        case STAY_OUT:
-            mState = State.STAYING_OUT;
         }
 
     }
 
     @Override
     public synchronized void readPeriodicInputs() {
-        mPeriodicIO.intake_out = mIntakeSolenoidTimer.update(mPeriodicIO.deploy, 0.2);
+        mPeriodicIO.intake_out = mIntakeSolenoidTimer.update(mPeriodicIO.deploy_out & !mPeriodicIO.deploy_in, 0.2);
         mCurrent = mPeriodicIO.current;
         if (mCSVWriter != null) {
             mCSVWriter.add(mPeriodicIO);
@@ -166,14 +163,16 @@ public class Intake extends Subsystem {
     @Override
     public void writePeriodicOutputs() {
         mMaster.set(ControlMode.PercentOutput, mPeriodicIO.demand / 12.0);
-        mDeploySolenoid.set(mPeriodicIO.deploy);
+        mDeployOut.set(mPeriodicIO.deploy_out);
+        mDeployIn.set(mPeriodicIO.deploy_in);
     }
 
     @Override
     public synchronized void outputTelemetry() {
         SmartDashboard.putNumber("Intake Current", mPeriodicIO.current);
+        SmartDashboard.putNumber("Intake Demand", mMaster.getMotorOutputVoltage());
         SmartDashboard.putString("Intake State", mState.toString());
-        SmartDashboard.putBoolean("Intake Deploy Goal", mPeriodicIO.deploy);
+        SmartDashboard.putBoolean("Intake Deploy Goal", mPeriodicIO.deploy_out & !mPeriodicIO.deploy_in);
         SmartDashboard.putBoolean("Intake Deploy Actual", mPeriodicIO.intake_out);
         if (mCSVWriter != null) {
             mCSVWriter.write();
@@ -193,7 +192,8 @@ public class Intake extends Subsystem {
 
         // OUTPUTS
         public double demand;
-        public boolean deploy;
+        public boolean deploy_out;
+        public boolean deploy_in;
     }
 }
 
