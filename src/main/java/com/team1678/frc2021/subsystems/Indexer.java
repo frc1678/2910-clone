@@ -39,7 +39,7 @@ public class Indexer extends Subsystem {
     private TimeDelayedBoolean mIntakeProxyTimer = new TimeDelayedBoolean();  
 
     private static double kIdleVoltage = 0.0;
-    private static double kIndexingVoltage = 9.0;
+    private static double kIndexingVoltage = 5.0;
     private static double kFeedingVoltage = 12.0;
     private static final double kIndexTime = 1.0;
 
@@ -77,8 +77,6 @@ public class Indexer extends Subsystem {
 
         // Set up TalonFX for the Falcon500
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kIndexerId);
-
-        mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.setInverted(true);
         mMaster.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMaster.enableVoltageCompensation(true);
@@ -94,6 +92,13 @@ public class Indexer extends Subsystem {
         switch (wanted_state) {
             case NONE:
                 mState = State.IDLE;
+                
+                if (mIntake.getState() == Intake.State.INTAKING) {
+                    mState = State.INDEXING;
+                }
+                if (mIntake.getState() == Intake.State.REVERSING) {
+                    mState = State.REVERSING;
+                }
                 break;
             case INDEX:
                 mState = State.INDEXING;
@@ -167,11 +172,11 @@ public class Indexer extends Subsystem {
     }
 
     private boolean indexNextBall() {
-        if (indexerIsFull()) {
-            return false;
-        } else {
-            return ballAtIndexer();
-        }
+        // if (indexerIsFull()) {
+        //     return false;
+        // } else {
+             return ballAtIndexer();
+        // }
     }
 
     /**
@@ -182,19 +187,18 @@ public class Indexer extends Subsystem {
             // Idling
             case IDLE:
                 mPeriodicIO.demand = kIdleVoltage;
-
-                if (mIntake.getState() == Intake.State.INTAKING) {
-                    mInstance.setState(WantedAction.INDEX);
-                }
                 break;
             // Indexing, pushing balls to the shooter
             case INDEXING:
-                mPeriodicIO.demand = kIndexingVoltage;
-                // mPeriodicIO.demand = indexNextBall() ? kIndexingVoltage : kIdleVoltage;
+                // mPeriodicIO.demand = kIndexingVoltage;
+                mPeriodicIO.demand = indexNextBall() ? -kIndexingVoltage : kIdleVoltage;
                 break;
             // Feeding, pushing balls for shooting into the shooter
             case FEEDING:
-                mPeriodicIO.demand = kFeedingVoltage;
+                mPeriodicIO.demand = -kFeedingVoltage;
+                break;
+            case REVERSING:
+                mPeriodicIO.demand = kIndexingVoltage;
                 break;
             default:
                 System.out.println("Fell through on Indexer states!");
@@ -253,8 +257,11 @@ public class Indexer extends Subsystem {
      */
     @Override
     public void outputTelemetry() {
+        SmartDashboard.putString("Indexer State", mState.toString());
         SmartDashboard.putBoolean("Indexer is Full", indexerIsFull());
         SmartDashboard.putBoolean("Ball in Intake", ballAtIndexer());
+        SmartDashboard.putNumber("Indexer Demand", mPeriodicIO.demand);
+        SmartDashboard.putNumber("Indexer Voltage", mMaster.getMotorOutputVoltage());
         SmartDashboard.putNumber("Indexer Current", mPeriodicIO.current);
     }
 }

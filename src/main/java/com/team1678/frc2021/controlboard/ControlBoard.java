@@ -31,6 +31,10 @@ public class ControlBoard {
         return mButtonControlBoard.getRunIntake();
     }
 
+    public boolean getReverseIntake() {
+        return mButtonControlBoard.getReverseIntake();
+    }
+
     public boolean getRetractIntake() {
         return mButtonControlBoard.getRetractIntake();
     }

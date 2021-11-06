@@ -17,8 +17,8 @@ public class Superstructure extends Subsystem {
     private final Hood mHood = Hood.getInstance();
 
     // Setpoint variables
-    private double mHoodSetpoint = 60.0;;
-    private double mShooterSetpoint = 0.0;
+    private double mHoodSetpoint = 30.0;;
+    private double mShooterSetpoint = 100.0;
 
     public enum WantedAction {
         NONE, TUCK, SCAN, PREP, SHOOT, SPIT
@@ -101,9 +101,9 @@ public class Superstructure extends Subsystem {
         case SCANNING:
             mShooterSetpoint = 0.0;
             mHoodSetpoint = Constants.kHoodMinLimit + 10;
-            if (Util.epsilonEquals(mHood.getHoodAngle(), Constants.kHoodMinLimit + 10, 10.0)) {
+            if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMinLimit + 10, 10.0)) {
                 mHoodSetpoint = Constants.kHoodMaxLimit - 10;
-            } else if (Util.epsilonEquals(mHood.getHoodAngle(), Constants.kHoodMaxLimit - 10, 10.0)) {
+            } else if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMaxLimit - 10, 10.0)) {
                 mHoodSetpoint = Constants.kHoodMinLimit + 10;
             }
 
@@ -113,6 +113,7 @@ public class Superstructure extends Subsystem {
             // double distanceToTarget = Vision.distanceToTarget(); // placeholder
             // mHoodSetpoint = getHoodSetpoint(distanceToTarget);
             // mShooterSetpoint = getShooterSetpoint(distanceToTarget);
+            
             break;
         case SHOOTING:
             mShooter.setVelocity(mShooterSetpoint);

@@ -67,12 +67,13 @@ public class Robot extends TimedRobot {
       CrashTracker.logRobotInit();
   
       mSubsystemManager.setSubsystems(
+        mSuperstructure,
         mCanifier,
         mInfrastructure,
         mIntake,
-        mIndexer //,
-        // mShooter,
-        // mHood,
+        mIndexer,
+        mShooter,
+        mHood //,
         // mLimelight
       );
 
@@ -103,6 +104,8 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
 
     mSubsystemManager.outputToSmartDashboard();
+    mEnabledLooper.outputToSmartDashboard();
+
   }
 
   /** This function is called once each time the 3 enters Disabled mode. */
@@ -206,6 +209,8 @@ public class Robot extends TimedRobot {
           // mIndexer.setState(Indexer.WantedAction.INDEX);
       } else if (mControlBoard.getRetractIntake()) {
           mIntake.setState(Intake.WantedAction.RETRACT);
+      } else if (mControlBoard.getReverseIntake()) {
+          mIntake.setState(Intake.WantedAction.REVERSE);
       } else if (mControlBoard.getTuck()) {
           mSuperstructure.setState(Superstructure.WantedAction.TUCK);
       } else if (mControlBoard.getWantHoodScan()) {
@@ -217,7 +222,7 @@ public class Robot extends TimedRobot {
       } else if (mControlBoard.getTestSpit()) {
           mSuperstructure.setState(Superstructure.WantedAction.SPIT);
       } else {
-          mSuperstructure.setState(Superstructure.WantedAction.NONE);
+          // mSuperstructure.setState(Superstructure.WantedAction.NONE);
           mIntake.setState(Intake.WantedAction.NONE);
           mIndexer.setState(Indexer.WantedAction.NONE);
       }
