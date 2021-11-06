@@ -142,7 +142,6 @@ public class Constants {
 	 public static final double kCameraFrameRate = 90.0;
 	 public static final double kMinStability = 0.5;
 	 public static final int kPortPipeline = 0;
-	 public static final int kBallPipeline = 2;
 	 public static final double kGoalHeight = 90.0;
 
 	 public static final double kInnerGoalDepth = 0;
