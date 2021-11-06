@@ -39,7 +39,9 @@ public class ControlBoard {
         return mButtonControlBoard.getJogHood();
     }
 
-    // Intake
+    public boolean getWantHoodScan() {
+        return mButtonControlBoard.getWantHoodScan();
+    }
 
     public boolean getShoot() {
         return mButtonControlBoard.getShoot();
@@ -60,6 +62,11 @@ public class ControlBoard {
     public boolean getUntuck() {
         return mButtonControlBoard.getUntuck();
     }
+
+    public boolean getTestSpit() {
+        return mButtonControlBoard.getTestSpit();
+    }
+
     public void setRumble(boolean on) {
         mButtonControlBoard.setRumble(on);
     }

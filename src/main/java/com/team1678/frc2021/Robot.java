@@ -45,6 +45,9 @@ public class Robot extends TimedRobot {
   private final Hood mHood = Hood.getInstance();
   private final Limelight mLimelight = Limelight.getInstance();
 
+  // superstructure
+  private final Superstructure mSuperstructure = Superstructure.getInstance();
+
   // controlboard
   private final ControlBoard mControlBoard = ControlBoard.getInstance();
 
@@ -203,8 +206,20 @@ public class Robot extends TimedRobot {
           // mIndexer.setState(Indexer.WantedAction.INDEX);
       } else if (mControlBoard.getRetractIntake()) {
           mIntake.setState(Intake.WantedAction.RETRACT);
+      } else if (mControlBoard.getTuck()) {
+          mSuperstructure.setState(Superstructure.WantedAction.TUCK);
+      } else if (mControlBoard.getWantHoodScan()) {
+          mSuperstructure.setState(Superstructure.WantedAction.SCAN);
+      } else if (mControlBoard.getPreShot()) {
+          mSuperstructure.setState(Superstructure.WantedAction.PREP);
+      } else if (mControlBoard.getShoot()) {
+          mSuperstructure.setState(Superstructure.WantedAction.SHOOT);
+      } else if (mControlBoard.getTestSpit()) {
+          mSuperstructure.setState(Superstructure.WantedAction.SPIT);
       } else {
+          mSuperstructure.setState(Superstructure.WantedAction.NONE);
           mIntake.setState(Intake.WantedAction.NONE);
+          mIndexer.setState(Indexer.WantedAction.NONE);
       }
 
     } catch (Throwable t) {

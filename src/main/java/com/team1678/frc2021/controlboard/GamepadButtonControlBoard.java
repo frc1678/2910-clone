@@ -46,13 +46,23 @@ public class GamepadButtonControlBoard {
         return (jog - kDeadband * Math.signum(jog));
     }
 
+    public boolean getWantHoodScan() {
+        return mController.getButton(CustomXboxController.Button.L_JOYSTICK);
+    }
+
+    public boolean getTestSpit() {
+        return mController.getController().getStickButtonReleased(Hand.kRight);
+    }
+
     public void setRumble(boolean on) { //TODO: all 5 power cells indexed
         mController.setRumble(on);
     }
 
+    /*
     public boolean getSpinUp() {
         return mController.getController().getAButtonPressed();
     }
+    */
 
     public boolean getTuck() {
         return mController.getButton(Button.X);
@@ -67,7 +77,7 @@ public class GamepadButtonControlBoard {
     }
 
     public boolean getPreShot() {
-        return mController.getController().getBButtonReleased();
+        return mController.getController().getAButtonPressed();
     }
     
     public boolean getIntake() {
