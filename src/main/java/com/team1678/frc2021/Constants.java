@@ -89,7 +89,7 @@ public class Constants {
 	public static final int kMasterFlywheelID = 2;
 	public static final int kSlaveFlywheelID = 15;
 	public static final int kHoodRollerID = 16;
-	public static final double kShooterP = 0.2;
+	public static final double kShooterP = 0.25;
 	public static final double kShooterI = 0.00004;
 	public static final double kShooterD = 0.0;
 	public static final double kShooterF = 0.05;
@@ -97,51 +97,22 @@ public class Constants {
 	public static final double kTriggerI = 0.0;
 	public static final double kTriggerD = 0.0;
 	public static final double kTriggerF = 0.05;
-
 	public static final double kTriggerRPM = 5000.0;
 
+	public static final double kShooterFlywheel_ff_v = 0.469; // TODO: Test to find real value
+	public static final double kShooterOverhead_ff_v = 0.469; // TODO: Test to find real value
+
 	// hood
-	public static final ServoMotorSubsystem.ServoMotorSubsystemConstants kHoodConstants = new ServoMotorSubsystem.ServoMotorSubsystemConstants();
-	static {
-		kHoodConstants.kName = "Hood";
-
-		kHoodConstants.kMasterConstants.id = 6;
-		kHoodConstants.kMasterConstants.invert_motor = true;
-		kHoodConstants.kMasterConstants.invert_sensor_phase = false;
-
-		// Unit == Degrees
-		kHoodConstants.kHomePosition = 0.0; // Degrees
-		kHoodConstants.kTicksPerUnitDistance = (2048.0 * 93.8) / 360.0;
-		kHoodConstants.kKp = 0.5;
-		kHoodConstants.kKi = 0;
-		kHoodConstants.kKd = 0;
-		kHoodConstants.kKf = 0.05;
-		kHoodConstants.kMaxIntegralAccumulator = 0;
-		kHoodConstants.kIZone = 0; // Ticks
-		kHoodConstants.kDeadband = 0; // Ticks
-
-		kHoodConstants.kPositionKp = 0.1;
-		kHoodConstants.kPositionKi = 0;
-		kHoodConstants.kPositionKd = 0;
-		kHoodConstants.kPositionKf = 0.0;
-		kHoodConstants.kPositionMaxIntegralAccumulator = 0;
-		kHoodConstants.kPositionIZone = 0; // Ticks
-		kHoodConstants.kPositionDeadband = 0; // Ticks
-
-		// degrees of limelight pitch from horiz
-		kHoodConstants.kMinUnitsLimit = 17.66;
-		kHoodConstants.kMaxUnitsLimit = 89.5;
-
-		kHoodConstants.kCruiseVelocity = 20000; // Ticks / 100ms
-		kHoodConstants.kAcceleration = 20000; // Ticks / 100ms / s
-		kHoodConstants.kRampRate = 0.0; // s
-		kHoodConstants.kContinuousCurrentLimit = 35; // amps
-		kHoodConstants.kPeakCurrentLimit = 40; // amps
-		kHoodConstants.kPeakCurrentDuration = 10; // milliseconds
-		kHoodConstants.kMaxVoltage = 6;
-
-		kHoodConstants.kAbsoluteEncoderID = 3;
-	}
+	public static final int kHoodID = 6;
+	public static final int kHoodAbsoluteEncoderID = 3;
+	public static final int kHoodEncoderOffset = 0; // TODO: Find real value
+	public static final boolean kHoodInvertMotor = true;
+	public static final double kHoodGearRatio = (2048.0 * 93.8) / 360.0;
+	public static final double kHoodP = 0.25;
+	public static final double kHoodI = 0.0;
+	public static final double kHoodD = 0.0;
+	public static final double kHoodMinLimit = 26.9; // TODO: Check value with absolute encoder
+	public static final double kHoodMaxLimit = 64.54; // TODO: Check value with absolute encoder
 
 	// limelight
 	 public static final LimelightConstants kLimelightConstants = new LimelightConstants();
