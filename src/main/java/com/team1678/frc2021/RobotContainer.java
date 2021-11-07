@@ -73,7 +73,7 @@ public class RobotContainer {
     aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
     xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270))); 
     
-    rightBumber.whenPressed(new VisionRotateToTargetCommand(s_Swerve, Limelight.getInstance(), () ->  translationAxis, () -> strafeAxis));
+    rightBumber.whenPressed(new VisionRotateToTargetCommand(s_Swerve, Limelight.getInstance(), translationAxis, strafeAxis, driver));
   }
 
   /**
