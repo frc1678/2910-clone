@@ -5,6 +5,7 @@ package com.team1678.frc2021;
 
 import com.team1323.lib.util.CrashTracker;
 import com.team1678.frc2021.subsystems.Swerve;
+import com.team1678.frc2021.subsystems.Superstructure.WantedAction;
 import com.team2910.lib.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -73,8 +74,8 @@ public class Robot extends TimedRobot {
         mIntake,
         mIndexer,
         mShooter,
-        mHood //,
-        // mLimelight
+        mHood// ,
+        //mLimelight
       );
 
       mSubsystemManager.registerEnabledLoops(mEnabledLooper);
@@ -211,6 +212,13 @@ public class Robot extends TimedRobot {
           mIntake.setState(Intake.WantedAction.RETRACT);
       } else if (mControlBoard.getReverseIntake()) {
           mIntake.setState(Intake.WantedAction.REVERSE);
+      } else {
+        mIntake.setState(Intake.WantedAction.NONE);
+        mIndexer.setState(Indexer.WantedAction.NONE);
+      }
+      
+      if (mControlBoard.getWantResetShooter()){
+        mSuperstructure.setState(Superstructure.WantedAction.IDLE);
       } else if (mControlBoard.getTuck()) {
           mSuperstructure.setState(Superstructure.WantedAction.TUCK);
       } else if (mControlBoard.getWantHoodScan()) {
@@ -222,9 +230,7 @@ public class Robot extends TimedRobot {
       } else if (mControlBoard.getTestSpit()) {
           mSuperstructure.setState(Superstructure.WantedAction.SPIT);
       } else {
-          // mSuperstructure.setState(Superstructure.WantedAction.NONE);
-          mIntake.setState(Intake.WantedAction.NONE);
-          mIndexer.setState(Indexer.WantedAction.NONE);
+          mSuperstructure.setState(Superstructure.WantedAction.NONE);
       }
 
     } catch (Throwable t) {

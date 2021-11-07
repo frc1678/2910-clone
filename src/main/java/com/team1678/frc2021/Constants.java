@@ -88,8 +88,8 @@ public class Constants {
 	// shooter
 	public static final int kMasterFlywheelID = 2;
 	public static final int kSlaveFlywheelID = 15;
-	public static final int kHoodRollerID = 16;
-	public static final double kShooterP = 0.25;
+	public static final int kHoodRollerID = 1;
+	public static final double kShooterP = 0.1;
 	public static final double kShooterI = 0.00004;
 	public static final double kShooterD = 0.0;
 	public static final double kShooterF = 0.05;

@@ -21,7 +21,7 @@ public class Superstructure extends Subsystem {
     private double mShooterSetpoint = 100.0;
 
     public enum WantedAction {
-        NONE, TUCK, SCAN, PREP, SHOOT, SPIT
+        NONE, IDLE, TUCK, SCAN, PREP, SHOOT, SPIT
     }
 
     public enum State {
@@ -36,6 +36,8 @@ public class Superstructure extends Subsystem {
     public void setState(WantedAction wanted_state) {
         switch (wanted_state) {
         case NONE:
+            break;
+        case IDLE:
             mState = State.IDLE;
             break;
         case TUCK:
@@ -52,6 +54,8 @@ public class Superstructure extends Subsystem {
             break;
         case SPIT:
             mState = State.SPITTING;
+            break;
+        default:
             break;
         }
     }
@@ -71,7 +75,7 @@ public class Superstructure extends Subsystem {
             @Override
             public void onLoop(double timestamp) {
                 synchronized (Superstructure.this) {
-                    runStateMachine();
+                    updateSetpoints();
                 }
             }
 
@@ -83,54 +87,54 @@ public class Superstructure extends Subsystem {
         });
     }
 
-    public void runStateMachine() {
+    public void updateSetpoints() {
         switch (mState) {
-        case IDLE:
-            mIndexer.setState(Indexer.WantedAction.NONE); // indexer should be inactive in idle
-            mShooterSetpoint = 0.0; // shooter doesn't spin in idle
-            // hood should keep its current setpoint
+            case IDLE:
+                mIndexer.setState(Indexer.WantedAction.NONE); // indexer should be inactive in idle
+                mShooterSetpoint = 0.0; // shooter doesn't spin in idle
+                // hood should keep its current setpoint
 
-            mShooter.setVelocity(mShooterSetpoint);
-            break;
-        case TUCKING:
-            mHood.setHoodTargetAngle(Constants.kHoodMinLimit);
-            mShooterSetpoint = 0.0;
+                mShooter.setVelocity(mShooterSetpoint);
+                break;
+            case TUCKING:
+                mHood.setHoodTargetAngle(Constants.kHoodMinLimit);
+                mShooterSetpoint = 0.0;
 
-            mShooter.setVelocity(mShooterSetpoint);
-            break;
-        case SCANNING:
-            mShooterSetpoint = 0.0;
-            mHoodSetpoint = Constants.kHoodMinLimit + 10;
-            if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMinLimit + 10, 10.0)) {
-                mHoodSetpoint = Constants.kHoodMaxLimit - 10;
-            } else if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMaxLimit - 10, 10.0)) {
+                mShooter.setVelocity(mShooterSetpoint);
+                break;
+            case SCANNING:
+                mShooterSetpoint = 0.0;
                 mHoodSetpoint = Constants.kHoodMinLimit + 10;
-            }
+                if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMinLimit + 10, 10.0)) {
+                    mHoodSetpoint = Constants.kHoodMaxLimit - 10;
+                } else if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMaxLimit - 10, 10.0)) {
+                    mHoodSetpoint = Constants.kHoodMinLimit + 10;
+                }
 
-            mShooter.setVelocity(mShooterSetpoint);
-            break;
-        case PREPPING:
-            // double distanceToTarget = Vision.distanceToTarget(); // placeholder
-            // mHoodSetpoint = getHoodSetpoint(distanceToTarget);
-            // mShooterSetpoint = getShooterSetpoint(distanceToTarget);
-            
-            break;
-        case SHOOTING:
-            mShooter.setVelocity(mShooterSetpoint);
-            if (mShooter.spunUp()) {
-                mIndexer.setState(Indexer.WantedAction.FEED);
-            }
-            break;
-        case SPITTING:
-            mHoodSetpoint = Constants.kHoodMinLimit + 10;
-            mShooterSetpoint = 1000;
+                mShooter.setVelocity(mShooterSetpoint);
+                break;
+            case PREPPING:
+                // double distanceToTarget = Vision.distanceToTarget(); // placeholder
+                // mHoodSetpoint = getHoodSetpoint(distanceToTarget);
+                // mShooterSetpoint = getShooterSetpoint(distanceToTarget);
+                
+                break;
+            case SHOOTING:
+                mShooter.setVelocity(mShooterSetpoint);
+                // if (mShooter.spunUp()) {
+                    mIndexer.setState(Indexer.WantedAction.FEED);
+                // }
+                break;
+            case SPITTING:
+                mHoodSetpoint = Constants.kHoodMinLimit + 10;
+                mShooterSetpoint = 2000;
 
-            mShooter.setVelocity(mShooterSetpoint);
-            if (mShooter.spunUp()) {
-                mIndexer.setState(Indexer.WantedAction.FEED);
+                mShooter.setVelocity(mShooterSetpoint);
+                if (mShooter.spunUp()) {
+                    mIndexer.setState(Indexer.WantedAction.FEED);
+                }
+                break;
             }
-            break;
-        }
 
         mHood.setHoodTargetAngle(mHoodSetpoint);
     }
@@ -151,7 +155,7 @@ public class Superstructure extends Subsystem {
     @Override
     public boolean checkSystem() {
         // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     public static synchronized Superstructure getInstance() {

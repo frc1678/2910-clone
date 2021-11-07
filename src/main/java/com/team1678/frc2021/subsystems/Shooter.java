@@ -35,8 +35,8 @@ public class Shooter extends Subsystem {
 
     private boolean mRunningManual = false;
 
-    private static double kFlywheelVelocityConversion = 600.0 / 2048.0;
-    private static double kOverheadVelocityConversion = 600.0 / 2048.0;
+    private static double kFlywheelVelocityConversion = 400.0 / 2048.0;
+    private static double kOverheadVelocityConversion = 400.0 / 2048.0;
 
     private static double kFlywheelTolerance = 200.0;
     private static double kOverheadTolerance = 200.0;
@@ -44,11 +44,12 @@ public class Shooter extends Subsystem {
     private Shooter() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
+        mSlave.setInverted(true);
         mOverhead = TalonFXFactory.createDefaultTalon(Constants.kHoodRollerID);
 
         // flywheel motor configs
         mMaster.set(ControlMode.PercentOutput, 0);
-        mMaster.setInverted(false); //TODO: check value
+        mMaster.setInverted(true); //TODO: check value
         mMaster.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMaster.enableVoltageCompensation(true);
         
@@ -75,7 +76,7 @@ public class Shooter extends Subsystem {
         mOverhead.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
         mOverhead.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
         mOverhead.selectProfileSlot(0, 0);
-
+ 
         // feedback sensor        
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
@@ -207,7 +208,8 @@ public class Shooter extends Subsystem {
             mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterFlywheel_ff_v);
             mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterOverhead_ff_v);
         } else {
-            mMaster.set(ControlMode.PercentOutput, 0);
+            mMaster.set(ControlMode.PercentOutput, 0.0);
+            mOverhead.set(ControlMode.PercentOutput, 0.0);
         }
     }
 

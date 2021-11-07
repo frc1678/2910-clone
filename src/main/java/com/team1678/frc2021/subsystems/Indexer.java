@@ -91,13 +91,12 @@ public class Indexer extends Subsystem {
 
         switch (wanted_state) {
             case NONE:
-                mState = State.IDLE;
-                
                 if (mIntake.getState() == Intake.State.INTAKING) {
                     mState = State.INDEXING;
-                }
-                if (mIntake.getState() == Intake.State.REVERSING) {
+                } else if (mIntake.getState() == Intake.State.REVERSING) {
                     mState = State.REVERSING;
+                } else {
+                    mState = State.IDLE;
                 }
                 break;
             case INDEX:
@@ -191,14 +190,14 @@ public class Indexer extends Subsystem {
             // Indexing, pushing balls to the shooter
             case INDEXING:
                 // mPeriodicIO.demand = kIndexingVoltage;
-                mPeriodicIO.demand = indexNextBall() ? -kIndexingVoltage : kIdleVoltage;
+                mPeriodicIO.demand = indexNextBall() ? kIndexingVoltage : kIdleVoltage;
                 break;
             // Feeding, pushing balls for shooting into the shooter
             case FEEDING:
-                mPeriodicIO.demand = -kFeedingVoltage;
+                mPeriodicIO.demand = kFeedingVoltage;
                 break;
             case REVERSING:
-                mPeriodicIO.demand = kIndexingVoltage;
+                mPeriodicIO.demand = -kIndexingVoltage;
                 break;
             default:
                 System.out.println("Fell through on Indexer states!");

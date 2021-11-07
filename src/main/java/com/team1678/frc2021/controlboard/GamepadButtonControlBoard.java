@@ -83,6 +83,9 @@ public class GamepadButtonControlBoard {
         return mController.getTrigger(CustomXboxController.Side.RIGHT);
     } 
     
+    public boolean getShooterReset() {
+        return mController.getButton(Button.B);
+    }
 
     // Intake
     public boolean getRunIntake() {
