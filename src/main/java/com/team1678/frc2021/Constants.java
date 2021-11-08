@@ -6,7 +6,7 @@ import java.util.List;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.team1323.lib.util.InterpolatingDouble;
 import com.team1323.lib.util.InterpolatingTreeMap;
-import com.team1678.frc2021.subsystems.Limelight.LimelightConstants;
+// import com.team1678.frc2021.subsystems.Limelight.LimelightConstants;
 import com.team1678.lib.util.SwerveModuleConstants;
 import com.team1678.frc2021.subsystems.ServoMotorSubsystem;
 import com.team254.lib.geometry.Pose2d;
@@ -105,15 +105,20 @@ public class Constants {
 	// hood
 	public static final int kHoodID = 6;
 	public static final int kHoodAbsoluteEncoderID = 3;
-	public static final double kHoodEncoderOffset = 35.45; //  17122 ticks // 35.45; // degrees
+	public static final double kHoodEncoderOffset = 59.95; //  17122 ticks // 35.45; // degrees
 	public static final boolean kHoodInvertMotor = false;
 	public static final double kHoodGearRatio = (2048.0 * 85.3) / 360.0;
-	public static final double kHoodP = 0.25;
+	public static final double kHoodP = 0.05;
 	public static final double kHoodI = 0.0;
 	public static final double kHoodD = 0.0;
+	public static final double kHoodF = 0.05;
 	public static final double kHoodMinLimit = 15.00; // TODO: Check value with absolute encoder
 	public static final double kHoodMaxLimit = 80.00; // TODO: Check value with absolute encoder
+	public static final double kHoodCruiseVelocity = 10;
+	public static final double kHoodCruiseAcceleration = 10;
+	public static final double kHoodDeadband = 0;
 
+	/*
 	// limelight
 	 public static final LimelightConstants kLimelightConstants = new LimelightConstants();
 	 static {
@@ -123,6 +128,7 @@ public class Constants {
 		 kLimelightConstants.kTurretToLens = Pose2d.identity();
 		 kLimelightConstants.kHorizontalPlaneToLens = Rotation2d.fromRadians(34.0);
 	 }
+	 */
 
 	 public static final double kHorizontalFOV = 59.6; // degrees
 	 public static final double kVerticalFOV = 49.7; // degrees

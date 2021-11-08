@@ -3,6 +3,7 @@ package com.team1678.frc2021.subsystems;
 import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.loops.ILooper;
 import com.team1678.frc2021.loops.Loop;
+import com.team1678.frc2021.subsystems.ServoMotorSubsystem.ControlState;
 import com.team254.lib.util.ReflectingCSVWriter;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -35,17 +36,22 @@ public class Hood extends Subsystem {
 
     private final TalonFX mMaster;
     private final AnalogEncoder mEncoder;
+    protected ControlState mControlState = ControlState.OPEN_LOOP;
 
     private PeriodicIO mPeriodicIO = new PeriodicIO();
     private ReflectingCSVWriter<PeriodicIO> mCSVWriter = null;
     private boolean mRunningManual = false;
 
-    // Hood PID Controller
-    private final PidController mHoodController = new PidController(new PidConstants(0.020, 0.0, 0.001));
+    private boolean hoodWasReset = false;
 
     private void resetHoodToAbsolute() {
+        // if (hoodWasReset) {
+        //     return;
+        // }
         double absolute_position = getHoodDegreesToTicks(getTicksToHoodDegrees(mEncoder.getDistance()) - (Constants.kHoodEncoderOffset - Constants.kHoodMinLimit));
         mMaster.setSelectedSensorPosition(absolute_position);
+        hoodWasReset = true;
+        System.out.println("resetting hood!");
     }
 
     private Hood() {
@@ -101,7 +107,7 @@ public class Hood extends Subsystem {
                 // startLogging();
                 
                 // set hood falcon position to absolute encoder reset position
-                resetHoodToAbsolute();
+                // resetHoodToAbsolute();
             }
             @Override
             public void onLoop(double timestamp) {
@@ -129,9 +135,33 @@ public class Hood extends Subsystem {
         mPeriodicIO.encoder_position = mEncoder.getDistance();
         mPeriodicIO.motor_position = mMaster.getSelectedSensorPosition();
         mPeriodicIO.hood_angle = getHoodEncoderPosition();
+
+        if (mMaster.getControlMode() == ControlMode.MotionMagic) {
+            mPeriodicIO.active_trajectory_position = (int) mMaster.getActiveTrajectoryPosition();
+
+            final int newVel = (int) mMaster.getActiveTrajectoryVelocity();
+            if (Util.epsilonEquals(newVel, Constants.kHoodCruiseVelocity, Math.max(1, Constants.kHoodDeadband)) || Util
+                    .epsilonEquals(newVel, mPeriodicIO.active_trajectory_velocity, Math.max(1, Constants.kHoodDeadband))) {
+                // Mechanism is ~constant velocity.
+                mPeriodicIO.active_trajectory_acceleration = 0.0;
+            } else {
+                // Mechanism is accelerating.
+                mPeriodicIO.active_trajectory_acceleration = Math
+                        .signum(newVel - mPeriodicIO.active_trajectory_velocity) * Constants.kHoodCruiseAcceleration;
+            }
+            mPeriodicIO.active_trajectory_velocity = newVel;
+        } else {
+            mPeriodicIO.active_trajectory_position = Integer.MIN_VALUE;
+            mPeriodicIO.active_trajectory_velocity = 0;
+            mPeriodicIO.active_trajectory_acceleration = 0.0;
+        }
         
         if (mCSVWriter != null) {
             mCSVWriter.add(mPeriodicIO);
+        }
+
+        while (!hoodWasReset) {
+            resetHoodToAbsolute();
         }
     }
 
@@ -156,14 +186,32 @@ public class Hood extends Subsystem {
         mPeriodicIO.setpoint = setpoint_angle;
     }
 
+    protected double unitsPerSecondToTicksPer100ms(double units_per_second) {
+        return getHoodDegreesToTicks(units_per_second) / 10.0;
+    }
+    
+    public synchronized void setSetpointMotionMagic(double units, double feedforward_v) {
+        mPeriodicIO.setpoint = getHoodDegreesToTicks(units);
+        mPeriodicIO.feedforward = unitsPerSecondToTicksPer100ms(feedforward_v) * (Constants.kHoodF + Constants.kHoodD / 100.0) / 1023.0;
+        if (mControlState != ControlState.MOTION_MAGIC) {
+            mMaster.selectProfileSlot(0, 0);
+            mControlState = ControlState.MOTION_MAGIC;
+        }
+    }
+
+    public synchronized void setSetpointMotionMagic(double units) {
+        setSetpointMotionMagic(units, 0.0);
+    }
+
     @Override
     public void writePeriodicOutputs() {
-        if (!mRunningManual) {
-            mPeriodicIO.setpoint = MathUtils.clamp(mPeriodicIO.setpoint, Constants.kHoodMinLimit, Constants.kHoodMaxLimit);
-            mHoodController.setSetpoint(mPeriodicIO.setpoint);
-            mMaster.set(ControlMode.PercentOutput, mHoodController.calculate(getHoodAngle(), 0.02));            
+        if (mControlState == ControlState.MOTION_MAGIC) {
+            mMaster.set(ControlMode.MotionMagic, mPeriodicIO.setpoint, DemandType.ArbitraryFeedForward,
+                    mPeriodicIO.feedforward);
+        } else if (mControlState == ControlState.OPEN_LOOP) {
+            mMaster.set(ControlMode.PercentOutput, mPeriodicIO.setpoint, DemandType.ArbitraryFeedForward, 0.0);
         } else {
-            mMaster.set(ControlMode.PercentOutput, 0);
+            mMaster.set(ControlMode.PercentOutput, 0.0, DemandType.ArbitraryFeedForward, 0.0);
         }
     }
 
@@ -212,6 +260,10 @@ public class Hood extends Subsystem {
         public double encoder_position;
         public double motor_position;
         public double hood_angle;
+        public int active_trajectory_position; // ticks
+        public int active_trajectory_velocity; // ticks/100ms
+        public double active_trajectory_acceleration; // ticks/100ms/s
+        public double feedforward;
 
         //OUTPUTS
         public double setpoint;
