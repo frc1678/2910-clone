@@ -87,12 +87,12 @@ public class Constants {
 
 	// shooter
 	public static final int kMasterFlywheelID = 2;
-	public static final int kSlaveFlywheelID = 15;
+	public static final int kSlaveFlywheelID = 16;
 	public static final int kHoodRollerID = 1;
-	public static final double kShooterP = 0.0;
-	public static final double kShooterI = 0.0000;
+	public static final double kShooterP = 0.1;
+	public static final double kShooterI = 0.0;
 	public static final double kShooterD = 0.0;
-	public static final double kShooterF = 0.05;
+	public static final double kShooterF = 0.073;
 
 	public static final double kShooterFlywheel_ff_v = 0.0; // TODO: Test to find real value
 	public static final double kShooterOverhead_ff_v = 0.0; // TODO: Test to find real value
