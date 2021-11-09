@@ -1,8 +1,12 @@
 package com.team1678.frc2021.subsystems;
 
+import java.util.OptionalDouble;
+
 import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.loops.ILooper;
 import com.team1678.frc2021.loops.Loop;
+import com.team1678.frc2021.states.ShooterRegression;
+import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.Util;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,151 +15,8 @@ public class Superstructure extends Subsystem {
     // Superstructure instance
     private static Superstructure mInstance;
 
-    // Required subsystem instances
-    private final Indexer mIndexer = Indexer.getInstance();
-    private final Shooter mShooter = Shooter.getInstance();
-    private final Hood mHood = Hood.getInstance();
-
-    // Setpoint variables
-    private double mHoodSetpoint = 30.0;;
-    private double mShooterSetpoint = 100.0;
-
-    public enum WantedAction {
-        NONE, IDLE, TUCK, SCAN, PREP, SHOOT, SPIT
-    }
-
-    public enum State {
-        IDLE, TUCKING, SCANNING, PREPPING, SHOOTING, SPITTING
-    }
-    private State mState = State.IDLE;
-
     private Superstructure () {
         // empty
-    }
-
-    public void setState(WantedAction wanted_state) {
-        switch (wanted_state) {
-        case NONE:
-            break;
-        case IDLE:
-            mState = State.IDLE;
-            break;
-        case TUCK:
-            mState = State.TUCKING;
-            break;
-        case SCAN:
-            mState = State.SCANNING;
-            break;
-        case PREP:
-            mState = State.PREPPING;
-            break;
-        case SHOOT:
-            mState = State.SHOOTING;
-            break;
-        case SPIT:
-            mState = State.SPITTING;
-            break;
-        default:
-            break;
-        }
-    }
-
-    public synchronized State getState() {
-        return mState;
-    }
-
-    @Override
-    public void registerEnabledLoops(ILooper enabledLooper) {
-        enabledLooper.register(new Loop() {
-            @Override
-            public void onStart(double timestamp) {
-                mState = State.IDLE;
-            }
-
-            @Override
-            public void onLoop(double timestamp) {
-                synchronized (Superstructure.this) {
-                    updateSetpoints();
-                }
-            }
-
-            @Override
-            public void onStop(double timestamp) {
-                mState = State.IDLE;
-                stop();
-            }
-        });
-    }
-
-    public void updateSetpoints() {
-        switch (mState) {
-            case IDLE:
-                mIndexer.setState(Indexer.WantedAction.NONE); // indexer should be inactive in idle
-                mShooterSetpoint = 0.0; // shooter doesn't spin in idle
-                // hood should keep its current setpoint
-
-                mShooter.setVelocity(mShooterSetpoint);
-                break;
-            case TUCKING:
-                mHood.setHoodTargetAngle(Constants.kHoodMinLimit);
-                mShooterSetpoint = 0.0;
-
-                mShooter.setVelocity(mShooterSetpoint);
-                break;
-            case SCANNING:
-                mShooterSetpoint = 0.0;
-                mHoodSetpoint = Constants.kHoodMinLimit + 10;
-                if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMinLimit + 10, 10.0)) {
-                    mHoodSetpoint = Constants.kHoodMaxLimit - 10;
-                } else if (Util.epsilonEquals(mHood.getHoodEncoderPosition(), Constants.kHoodMaxLimit - 10, 10.0)) {
-                    mHoodSetpoint = Constants.kHoodMinLimit + 10;
-                }
-
-                mShooter.setVelocity(mShooterSetpoint);
-                break;
-            case PREPPING:
-                // double distanceToTarget = Vision.distanceToTarget(); // placeholder
-                // mHoodSetpoint = getHoodSetpoint(distanceToTarget);
-                // mShooterSetpoint = getShooterSetpoint(distanceToTarget);
-                
-                break;
-            case SHOOTING:
-                mShooter.setVelocity(mShooterSetpoint);
-                // if (mShooter.spunUp()) {
-                    mIndexer.setState(Indexer.WantedAction.FEED);
-                // }
-                break;
-            case SPITTING:
-                mHoodSetpoint = Constants.kHoodMinLimit + 10;
-                mShooterSetpoint = 2000;
-
-                mShooter.setVelocity(mShooterSetpoint);
-                if (mShooter.spunUp()) {
-                    mIndexer.setState(Indexer.WantedAction.FEED);
-                }
-                break;
-            }
-
-        mHood.setHoodTargetAngle(mHoodSetpoint);
-    }
-
-    @Override
-    public void outputTelemetry() {
-        SmartDashboard.putString("Superstructure Wanted Action", getState().toString());
-        SmartDashboard.putNumber("Hood Setpoint", mHoodSetpoint);
-        SmartDashboard.putNumber("Shooter Setpoint", mShooterSetpoint);
-    }
-
-    @Override
-    public void stop() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean checkSystem() {
-        // TODO Auto-generated method stub
-        return true;
     }
 
     public static synchronized Superstructure getInstance() {
@@ -163,6 +24,217 @@ public class Superstructure extends Subsystem {
             mInstance = new Superstructure();
         }
         return mInstance;
+    }
+
+    /* Required subsystem instances */
+    private final Intake mIntake = Intake.getInstance();
+    private final Indexer mIndexer = Indexer.getInstance();
+    private final Shooter mShooter = Shooter.getInstance();
+    private final Hood mHood = Hood.getInstance();
+    
+    // private final Swerve mSwerve = new Swerve();
+    // private final Vision mVisionTracker = new Vision(mSwerve);
+    
+    /* Setpoint variables */
+    private double mHoodSetpoint = 50.0;;
+    private double mShooterSetpoint = 0.0;
+
+    // Superstructure constants
+    private final double kSpitVelocity = 1000;
+
+    /* SUPERSTRUCTURE FUNCTIONS */
+    private boolean mWantsTuck = false;
+    private boolean mWantsScan = false;
+    private boolean mWantsPrep = false;
+    private boolean mWantsShoot = false;
+    private boolean mWantsSpit = false;
+
+    // Status variables for functions
+    private boolean mIsSpunUp = false;
+    private double formal_shooter = 0.0;
+    private double formal_hood = 0.0;
+    private Indexer.WantedAction formal_indexer = Indexer.WantedAction.NONE;
+
+    // Function setters
+    public synchronized void setWantTuck(boolean tuck) {
+        mWantsTuck = tuck;
+        mWantsPrep = false;
+        mWantsShoot = false;
+        mWantsScan = false;
+    }
+
+    public synchronized void setWantHoodScan(boolean scan) {
+        if (scan != mWantsScan) {
+            if (scan) {
+                mHoodSetpoint = Constants.kHoodMinLimit + 10;
+            } else {
+                mHoodSetpoint = mHood.getHoodAngle();
+            }
+        }
+        mWantsScan = scan;
+    }
+
+    public synchronized void setWantPrep() {
+        mWantsPrep = !mWantsPrep;
+        mWantsShoot = false;
+    }
+
+    public synchronized void setWantShoot() {
+        mWantsPrep = false;
+        mWantsShoot = !mWantsShoot;
+        mIsSpunUp = false;
+    }
+
+    public synchronized void setWantTestSpit() {
+        mWantsSpit = !mWantsSpit;
+    }
+
+    @Override
+    public void registerEnabledLoops(ILooper enabledLooper) {
+        enabledLooper.register(new Loop() {
+            @Override
+            public void onStart(double timestamp) {
+                // TODO: Add anything necessary
+            }
+
+            @Override
+            public void onLoop(double timestamp) {
+                synchronized (Superstructure.this) {
+                    maybeUpdateGoalFromHoodScan(timestamp);
+                    setSetpoints();
+                }
+            }
+
+            @Override
+            public void onStop(double timestamp) {
+                stop(); // TODO: Add anything necessary
+            }
+        });
+    }
+
+    /* UPDATE SHOOTER AND HOOD GOAL WHEN VISION AIMING */
+    public synchronized void maybeUpdateGoalFromVision(double timestamp) {
+        /*
+        if (mVisionTracker.hasTarget()) {
+            OptionalDouble distance_to_target = mVisionTracker.getDistanceToTarget();
+            if (distance_to_target.isPresent()) {
+                mHoodSetpoint = getHoodSetpointFromRegression(distance_to_target.getAsDouble());
+                mShooterSetpoint = getShooterSetpointFromRegression(distance_to_target.getAsDouble());
+            }
+        }
+        */
+
+    }
+
+    /* UPDATE HOOD GOAL FOR SCANNING TARGET */
+    public synchronized void maybeUpdateGoalFromHoodScan(double timestamp) {
+        if (!mWantsScan) {
+            return;
+        }
+
+        if (Util.epsilonEquals(mHood.getHoodAngle(), Constants.kHoodMinLimit + 10, 10.0)) {
+            mHoodSetpoint = Constants.kHoodMaxLimit - 10;
+        } else if (Util.epsilonEquals(mHood.getHoodAngle(), Constants.kHoodMaxLimit - 10, 10.0)) {
+            mHoodSetpoint = Constants.kHoodMinLimit + 10;
+        }
+    }
+
+    /* UPDATE AND SET ALL SETPOINTS */
+    public void setSetpoints() {
+        /* Default indexer wanted action */
+        Indexer.WantedAction real_indexer = Indexer.WantedAction.NONE;
+        /* Real hood angle setpoint to be set */
+        double real_hood = mHoodSetpoint;
+        /* Real shooter velocity setpoint to be set */
+        double real_shooter = mShooterSetpoint;
+        // status variable tracker for whether shooter is spun up
+        mIsSpunUp = mShooter.spunUp(); 
+
+        if (mIntake.getState() == Intake.State.INTAKING) {
+            real_indexer = Indexer.WantedAction.INDEX;
+        } else if (mIntake.getState() == Intake.State.REVERSING) {
+            real_indexer = Indexer.WantedAction.REVERSE;
+        }
+
+        if (mWantsTuck) {
+            real_hood = Constants.kHoodMinLimit;
+            real_shooter = 0.0;
+        }
+
+        if (mWantsPrep) {
+            real_hood = mHoodSetpoint;
+            real_shooter = 1500/*mShooterSetpoint*/;
+        } else if (mWantsShoot) {
+            real_hood = mHoodSetpoint;
+            real_shooter = 1500/*mShooterSetpoint*/;
+
+            // if (mIsSpunUp) {
+                real_indexer = Indexer.WantedAction.FEED;
+            //}
+        } else if (mWantsSpit) {
+            real_hood = Constants.kHoodMinLimit;
+            real_shooter = kSpitVelocity;
+        }
+
+        /* FOLLOW HOOD, SHOOTER, AND INDEXER GOALS */
+        mHood.setSetpointMotionMagic(real_hood);
+        mShooter.setVelocity(real_shooter);
+        mIndexer.setState(real_indexer);
+
+        formal_hood = real_hood;
+        formal_shooter = real_shooter;
+        formal_indexer = real_indexer;
+    }
+
+    /* GET SHOOTER AND HOOD SETPOINTS FROM SUPERSTRUCTURE CONSTANTS REGRESSION */
+    private double getShooterSetpointFromRegression(double range) {
+        if (ShooterRegression.kUseSmartdashboard) {
+            return SmartDashboard.getNumber("Shooting RPM", 0);
+        } else if (ShooterRegression.kUseFlywheelAutoAimPolynomial) {
+            return ShooterRegression.kFlywheelAutoAimPolynomial.predict(range);
+        } else {
+            return ShooterRegression.kFlywheelAutoAimMap.getInterpolated(new InterpolatingDouble(range)).value;
+        }
+    }
+    private double getHoodSetpointFromRegression(double range) {
+        if (ShooterRegression.kUseSmartdashboard) {
+            return SmartDashboard.getNumber("Hood Angle", 0);
+        } else if (ShooterRegression.kUseHoodAutoAimPolynomial) {
+            return ShooterRegression.kHoodAutoAimPolynomial.predict(range);
+        } else {
+            return ShooterRegression.kHoodAutoAimMap.getInterpolated(new InterpolatingDouble(range)).value;
+        }
+    }
+
+    @Override
+    public void outputTelemetry() {
+        // Formal goals for hood, shooter, and indexer that are followed
+        SmartDashboard.putNumber("Hood Goal", formal_hood);
+        SmartDashboard.putNumber("Hood Setpoint", mHoodSetpoint);
+        SmartDashboard.putNumber("Shooter Goal", formal_shooter);
+        SmartDashboard.putNumber("Shooter Setpoint", mShooterSetpoint);
+        SmartDashboard.putString("Indexer Goal", formal_indexer.toString());
+
+        // Other status tracker variables
+        SmartDashboard.putBoolean("Shooter Spun Up", mIsSpunUp);
+        
+        // Formal superstructure function values
+        SmartDashboard.putBoolean("Wants Tuck", mWantsTuck);
+        SmartDashboard.putBoolean("Wants Scan", mWantsScan);
+        SmartDashboard.putBoolean("Wants Prep", mWantsPrep);
+        SmartDashboard.putBoolean("Wants Shoot", mWantsShoot);
+        SmartDashboard.putBoolean("Wants Spit", mWantsSpit);
+    }
+
+    @Override
+    public void stop() {
+        // empty
+    }
+
+    @Override
+    public boolean checkSystem() {
+        // empty
+        return true;
     }
 
 }

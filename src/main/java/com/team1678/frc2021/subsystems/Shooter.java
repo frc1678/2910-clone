@@ -7,6 +7,7 @@ import com.team254.lib.util.ReflectingCSVWriter;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
@@ -35,17 +36,21 @@ public class Shooter extends Subsystem {
 
     private boolean mRunningManual = false;
 
-    private static double kFlywheelVelocityConversion = 400.0 / 2048.0;
-    private static double kOverheadVelocityConversion = 400.0 / 2048.0;
+    private static double mTargetShooterSetpoint = 0.0;
+    
+    private static double kFlywheelVelocityConversion = 150.0 / 2048.0;
+    private static double kOverheadVelocityConversion = 150.0 / 2048.0;
 
-    private static double kFlywheelTolerance = 200.0;
-    private static double kOverheadTolerance = 200.0;
+    private static double kFlywheelTolerance = 1000.0;
+    private static double kOverheadTolerance = 1000.0;
 
     private Shooter() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
+        mMaster.setNeutralMode(NeutralMode.Coast);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
         mSlave.setInverted(true);
         mOverhead = TalonFXFactory.createDefaultTalon(Constants.kHoodRollerID);
+        mOverhead.setNeutralMode(NeutralMode.Coast);
 
         // flywheel motor configs
         mMaster.set(ControlMode.PercentOutput, 0);
@@ -177,9 +182,27 @@ public class Shooter extends Subsystem {
         return false;
     }
 
+    /* set shooter velocity to a direct velocity given as a parameter and spin up */
     public synchronized void setVelocity(double velocity) {
         mPeriodicIO.flywheel_demand = velocity;
         mPeriodicIO.overhead_demand = -velocity; // must be reverse of lower flywheel
+        mRunningManual = false;
+    }
+
+    /* set target velocity for shooter based on vision, to use unless a direct velocity is provided */
+    public synchronized void setTargetVelocity(double velocity) {
+        mTargetShooterSetpoint = velocity;
+    }
+
+    /* get target velocity for shooter based on vision, to use unless a direct velocity is provided */
+    public synchronized double getTargetVelocity() {
+        return mTargetShooterSetpoint;
+    }
+
+    /* tell shooter to spin up to target velocity */
+    public synchronized void setShootWithTargetVelocity() {
+        mPeriodicIO.flywheel_demand = mTargetShooterSetpoint;
+        mPeriodicIO.overhead_demand = -mTargetShooterSetpoint;
         mRunningManual = false;
     }
 
@@ -205,11 +228,11 @@ public class Shooter extends Subsystem {
     @Override
     public void writePeriodicOutputs() {
         if (!mRunningManual) {
-            mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterFlywheel_ff_v);
-            mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion, DemandType.ArbitraryFeedForward, Constants.kShooterOverhead_ff_v);
+            mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion);
+            mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion);
         } else {
-            mMaster.set(ControlMode.PercentOutput, 0.0);
-            mOverhead.set(ControlMode.PercentOutput, 0.0);
+            mMaster.set(ControlMode.Disabled, 0.0);
+            mOverhead.set(ControlMode.Disabled, 0.0);
         }
     }
 
