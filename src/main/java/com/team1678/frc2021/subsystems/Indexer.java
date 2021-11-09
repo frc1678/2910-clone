@@ -91,13 +91,13 @@ public class Indexer extends Subsystem {
 
         switch (wanted_state) {
             case NONE:
-                if (mIntake.getState() == Intake.State.INTAKING) {
-                    mState = State.INDEXING;
-                } else if (mIntake.getState() == Intake.State.REVERSING) {
-                    mState = State.REVERSING;
-                } else {
-                    mState = State.IDLE;
-                }
+                // if (mIntake.getState() == Intake.State.INTAKING) {
+                //     mState = State.INDEXING;
+                // } else if (mIntake.getState() == Intake.State.REVERSING) {
+                //     mState = State.REVERSING;
+                // } else {
+                mState = State.IDLE;
+                // }
                 break;
             case INDEX:
                 mState = State.INDEXING;
