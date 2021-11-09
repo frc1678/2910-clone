@@ -5,6 +5,7 @@ import com.team1678.frc2021.subsystems.Vision;
 import com.team1678.frc2021.SwerveTools;
 import com.team1678.frc2021.subsystems.Limelight;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
@@ -22,23 +23,26 @@ public class VisionRotateToTargetCommand extends CommandBase {
     private final Swerve drivetrain;
     private final Vision visionSubsystem;
 
-    private final int xAxis;
-    private final int yAxis;
+    private final int yJoystick;
+    private final int xJoystick;
+    private final Joystick controller;
 
-    private PidController controller = new PidController(PID_CONSTANTS);
+    private PidController pid_controller = new PidController(PID_CONSTANTS);
     private double lastTime = 0.0;
 
     public VisionRotateToTargetCommand(Swerve drivetrain, Vision visionSubsystem,
-                                       int xAxis, int yAxis) {
+                                       int yAxis, int xAxis, Joystick controller) {
         this.drivetrain = drivetrain;
         this.visionSubsystem = visionSubsystem;
-        this.xAxis = xAxis;
-        this.yAxis = yAxis;
+        this.yJoystick = yAxis;
+        this.xJoystick = xAxis;
+        this.controller = controller;
+
         addRequirements(drivetrain);
         addRequirements(visionSubsystem);
 
-        controller.setInputRange(0.0, 2.0 * Math.PI);
-        controller.setContinuous(true);
+        pid_controller.setInputRange(0.0, 2.0 * Math.PI);
+        pid_controller.setContinuous(true);
     }
 
     @Override
@@ -46,7 +50,7 @@ public class VisionRotateToTargetCommand extends CommandBase {
         lastTime = Timer.getFPGATimestamp();
         visionSubsystem.setCamMode(Limelight.CamMode.VISION);
         visionSubsystem.setSnapshotEnabled(true);
-        controller.reset();
+        pid_controller.reset();
     }
     
 
@@ -57,15 +61,20 @@ public class VisionRotateToTargetCommand extends CommandBase {
         double dt = time - lastTime;
         lastTime = time;
 
-        Translation2d translationalVelocity = SwerveTools.applyTranslationalDeadband(new Translation2d(xAxis, yAxis));
+        double yAxis = controller.getRawAxis(yJoystick);
+        double xAxis = controller.getRawAxis(xJoystick);
+
+        Translation2d translationalVelocity = SwerveTools.applyTranslationalDeadband(new Translation2d(yAxis, xAxis));
 
         double rotationalVelocity = 0.0;
         if (visionSubsystem.hasTarget()) {
             System.out.println("running inside");
+
             double currentAngle = drivetrain.getPose().getRotation().getRadians();
             double targetAngle = visionSubsystem.getAngleToTarget().getAsDouble();
-            controller.setSetpoint(targetAngle);
-            rotationalVelocity = controller.calculate(currentAngle, dt);
+
+            pid_controller.setSetpoint(targetAngle);
+            rotationalVelocity = pid_controller.calculate(currentAngle, dt);
 
             /*
             if (translationalVelocity.length <

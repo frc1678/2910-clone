@@ -78,7 +78,7 @@ public class RobotContainer {
     aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
     xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270))); 
     
-    rightBumper.whileHeld(new VisionRotateToTargetCommand(s_Swerve, visionSubsystem, translationAxis, strafeAxis));
+    rightBumper.whileHeld(new VisionRotateToTargetCommand(s_Swerve, visionSubsystem, translationAxis, strafeAxis, driver));
   }
 
   /**
