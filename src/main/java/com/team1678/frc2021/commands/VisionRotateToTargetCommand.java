@@ -2,6 +2,7 @@ package com.team1678.frc2021.commands;
 
 import com.team1678.frc2021.subsystems.Swerve;
 import com.team1678.frc2021.subsystems.Vision;
+import com.team1678.frc2021.SwerveTools;
 import com.team1678.frc2021.subsystems.Limelight;
 
 import edu.wpi.first.wpilibj.RobotController;
@@ -47,6 +48,7 @@ public class VisionRotateToTargetCommand extends CommandBase {
         visionSubsystem.setSnapshotEnabled(true);
         controller.reset();
     }
+    
 
     @Override
     public void execute() {
@@ -55,7 +57,7 @@ public class VisionRotateToTargetCommand extends CommandBase {
         double dt = time - lastTime;
         lastTime = time;
 
-        Translation2d translationalVelocity = new Translation2d(xAxis, yAxis);
+        Translation2d translationalVelocity = SwerveTools.applyTranslationalDeadband(new Translation2d(xAxis, yAxis));
 
         double rotationalVelocity = 0.0;
         if (visionSubsystem.hasTarget()) {
