@@ -100,7 +100,7 @@ public class Constants {
 	// hood
 	public static final int kHoodID = 6;
 	public static final int kHoodAbsoluteEncoderID = 3;
-	public static final double kHoodEncoderOffset = 56.03; //  17122 ticks // 35.45; // degrees
+	public static final double kHoodEncoderOffset = 11.93; //  17122 ticks // 35.45; // degrees
 	public static final boolean kHoodInvertMotor = false;
 	public static final double kHoodGearRatio = (2048.0 * 85.3) / 360.0;
 	public static final double kHoodP = 0.05;
