@@ -89,15 +89,10 @@ public class Constants {
 	public static final int kMasterFlywheelID = 2;
 	public static final int kSlaveFlywheelID = 15;
 	public static final int kHoodRollerID = 1;
-	public static final double kShooterP = 0.1;
-	public static final double kShooterI = 0.00004;
+	public static final double kShooterP = 0.0;
+	public static final double kShooterI = 0.0000;
 	public static final double kShooterD = 0.0;
 	public static final double kShooterF = 0.05;
-	public static final double kTriggerP = 0.05;
-	public static final double kTriggerI = 0.0;
-	public static final double kTriggerD = 0.0;
-	public static final double kTriggerF = 0.05;
-	public static final double kTriggerRPM = 5000.0;
 
 	public static final double kShooterFlywheel_ff_v = 0.0; // TODO: Test to find real value
 	public static final double kShooterOverhead_ff_v = 0.0; // TODO: Test to find real value
@@ -105,7 +100,7 @@ public class Constants {
 	// hood
 	public static final int kHoodID = 6;
 	public static final int kHoodAbsoluteEncoderID = 3;
-	public static final double kHoodEncoderOffset = 59.95; //  17122 ticks // 35.45; // degrees
+	public static final double kHoodEncoderOffset = 56.03; //  17122 ticks // 35.45; // degrees
 	public static final boolean kHoodInvertMotor = false;
 	public static final double kHoodGearRatio = (2048.0 * 85.3) / 360.0;
 	public static final double kHoodP = 0.05;

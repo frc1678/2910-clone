@@ -75,11 +75,12 @@ public class Hood extends Subsystem {
         // feedback sensor        
         mMaster.set(ControlMode.PercentOutput, 0);
         mMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, Constants.kLongCANTimeoutMs);
+        mMaster.setSensorPhase(false);
         mMaster.configClosedloopRamp(0.2);
 
         // config encoder
         mEncoder = new AnalogEncoder(Constants.kHoodAbsoluteEncoderID);
-        mEncoder.setDistancePerRotation(33800); // ticks per rotation
+        mEncoder.setDistancePerRotation(360); // ticks per rotation
 
     }
 
@@ -132,7 +133,7 @@ public class Hood extends Subsystem {
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
 
-        mPeriodicIO.encoder_position = mEncoder.getDistance();
+        mPeriodicIO.encoder_position = mEncoder.get();
         mPeriodicIO.motor_position = mMaster.getSelectedSensorPosition();
         mPeriodicIO.hood_angle = getHoodEncoderPosition();
 
