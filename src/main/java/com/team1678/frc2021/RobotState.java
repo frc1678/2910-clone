@@ -220,7 +220,7 @@ public class RobotState {
         double z = xz_plane_translation.y();
 
         // find intersection with the goal
-        double lens_height = source.getLensHeight() + (Constants.kHoodRadius * hood_angle.sin);
+        double lens_height = /*source.getLensHeight()*/ + (Constants.kHoodRadius * hood_angle.sin);
         double differential_height = lens_height - (Constants.kGoalHeight);
         if ((z < 0.0) == (differential_height > 0.0)) {
             double scaling = differential_height / -z;
