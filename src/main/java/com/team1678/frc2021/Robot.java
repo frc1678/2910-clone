@@ -5,7 +5,6 @@ package com.team1678.frc2021;
 
 import com.team1323.lib.util.CrashTracker;
 import com.team1678.frc2021.subsystems.Swerve;
-import com.team1678.frc2021.subsystems.Superstructure.WantedAction;
 import com.team2910.lib.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,7 +43,6 @@ public class Robot extends TimedRobot {
   private final Indexer mIndexer = Indexer.getInstance();
   private final Shooter mShooter = Shooter.getInstance();
   private final Hood mHood = Hood.getInstance();
-  private final Limelight mLimelight = Limelight.getInstance();
 
   // superstructure
   private final Superstructure mSuperstructure = Superstructure.getInstance();
@@ -74,14 +72,11 @@ public class Robot extends TimedRobot {
         mIntake,
         mIndexer,
         mShooter,
-        mHood// ,
-        //mLimelight
+        mHood
       );
 
       mSubsystemManager.registerEnabledLoops(mEnabledLooper);
       mSubsystemManager.registerDisabledLoops(mDisabledLooper);
-
-      mLimelight.setLed(Limelight.LedMode.OFF);
 
     } catch (Throwable t) {
       CrashTracker.logThrowableCrash(t);
@@ -120,10 +115,6 @@ public class Robot extends TimedRobot {
 
       mDisabledLooper.start();
 
-      mLimelight.setLed(Limelight.LedMode.ON);
-      mLimelight.triggerOutputs();
-      mLimelight.writePeriodicOutputs();
-
       mHood.setNeutralMode(NeutralMode.Coast);
 
     } catch (Throwable t) {
@@ -153,9 +144,6 @@ public class Robot extends TimedRobot {
 
       mInfrastructure.setIsDuringAuto(true);
       mHood.setNeutralMode(NeutralMode.Brake);
-      
-      mLimelight.setLed(Limelight.LedMode.ON);
-      mLimelight.setPipeline(Constants.kPortPipeline);
 
       // RobotState.getInstance().reset(Timer.getFPGATimestamp(), Pose2d.identity());
 
@@ -188,8 +176,6 @@ public class Robot extends TimedRobot {
       mInfrastructure.setIsDuringAuto(false);
 
       mEnabledLooper.start();
-      mLimelight.setLed(Limelight.LedMode.ON);
-      mLimelight.setPipeline(Constants.kPortPipeline);
       mHood.setNeutralMode(NeutralMode.Brake);
       
     } catch (Throwable t) {
@@ -205,32 +191,28 @@ public class Robot extends TimedRobot {
     try {
       double timestamp = Timer.getFPGATimestamp();
 
-      if (mControlBoard.getRunIntake()) {
+      /* Check for hood scan */
+      mSuperstructure.setWantHoodScan(mControlBoard.getWantHoodScan());
+      
+      /* Use control board to set superstructure and subsystem functionality */
+      if (mControlBoard.getTuck()) {
+          mSuperstructure.setWantTuck(true);
+      } else if (mControlBoard.getUntuck()) {
+          mSuperstructure.setWantTuck(false);
+      } else if (mControlBoard.getPreShot()) {
+          mSuperstructure.setWantPrep();
+      } else if (mControlBoard.getShoot()) {
+          mSuperstructure.setWantShoot();;
+      } else if (mControlBoard.getTestSpit()) {
+          mSuperstructure.setWantTestSpit();
+      } else if (mControlBoard.getRunIntake()) {
           mIntake.setState(Intake.WantedAction.INTAKE);
-          // mIndexer.setState(Indexer.WantedAction.INDEX);
       } else if (mControlBoard.getRetractIntake()) {
           mIntake.setState(Intake.WantedAction.RETRACT);
       } else if (mControlBoard.getReverseIntake()) {
           mIntake.setState(Intake.WantedAction.REVERSE);
       } else {
-        mIntake.setState(Intake.WantedAction.NONE);
-        mIndexer.setState(Indexer.WantedAction.NONE);
-      }
-      
-      if (mControlBoard.getWantResetShooter()){
-        mSuperstructure.setState(Superstructure.WantedAction.IDLE);
-      } else if (mControlBoard.getTuck()) {
-          mSuperstructure.setState(Superstructure.WantedAction.TUCK);
-      } else if (mControlBoard.getWantHoodScan()) {
-          mSuperstructure.setState(Superstructure.WantedAction.SCAN);
-      } else if (mControlBoard.getPreShot()) {
-          mSuperstructure.setState(Superstructure.WantedAction.PREP);
-      } else if (mControlBoard.getShoot()) {
-          mSuperstructure.setState(Superstructure.WantedAction.SHOOT);
-      } else if (mControlBoard.getTestSpit()) {
-          mSuperstructure.setState(Superstructure.WantedAction.SPIT);
-      } else {
-          mSuperstructure.setState(Superstructure.WantedAction.NONE);
+          mIntake.setState(Intake.WantedAction.NONE);
       }
 
     } catch (Throwable t) {
