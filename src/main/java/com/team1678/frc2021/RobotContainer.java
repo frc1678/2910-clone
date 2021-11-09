@@ -7,6 +7,7 @@ package com.team1678.frc2021;
 import com.team1678.frc2021.subsystems.Swerve;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,7 +27,7 @@ import com.team1678.frc2021.subsystems.*;
  */
 public class RobotContainer {
   /* Controllers */
-  private final XboxController driver = new XboxController(0);
+  private final Joystick driver = new Joystick(0);
 
   /* Required instances */
   private final Swerve drivetrainSubsystem = new Swerve();
