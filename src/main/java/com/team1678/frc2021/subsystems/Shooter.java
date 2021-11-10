@@ -41,15 +41,15 @@ public class Shooter extends Subsystem {
     private static double kFlywheelVelocityConversion = 150.0 / 2048.0;
     private static double kOverheadVelocityConversion = 150.0 / 2048.0;
 
-    private static double kFlywheelTolerance = 1000.0;
-    private static double kOverheadTolerance = 1000.0;
+    private static double kFlywheelTolerance = 200.0;
+    private static double kOverheadTolerance = 200.0;
 
     private Shooter() {
         mMaster = TalonFXFactory.createDefaultTalon(Constants.kMasterFlywheelID);
         mMaster.setNeutralMode(NeutralMode.Coast);
         mSlave = TalonFXFactory.createPermanentSlaveTalon(Constants.kSlaveFlywheelID, Constants.kMasterFlywheelID);
         mSlave.setInverted(true);
-        mOverhead = TalonFXFactory.createDefaultTalon(Constants.kHoodRollerID);
+        mOverhead = TalonFXFactory.createDefaultTalon(Constants.kOverheadRollerID);
         mOverhead.setNeutralMode(NeutralMode.Coast);
 
         // flywheel motor configs
@@ -58,10 +58,10 @@ public class Shooter extends Subsystem {
         mMaster.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mMaster.enableVoltageCompensation(true);
         
-        mMaster.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
-        mMaster.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
-        mMaster.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
-        mMaster.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
+        mMaster.config_kP(0, Constants.kShooterFlywheelP, Constants.kLongCANTimeoutMs);
+        mMaster.config_kI(0, Constants.kShooterFlywheelI, Constants.kLongCANTimeoutMs);
+        mMaster.config_kD(0, Constants.kShooterFlywheelD, Constants.kLongCANTimeoutMs);
+        mMaster.config_kF(0, Constants.kShooterFlywheelF, Constants.kLongCANTimeoutMs);
         mMaster.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
         mMaster.selectProfileSlot(0, 0);
 
@@ -75,10 +75,10 @@ public class Shooter extends Subsystem {
         mOverhead.configVoltageCompSaturation(12.0, Constants.kLongCANTimeoutMs);
         mOverhead.enableVoltageCompensation(true);
         
-        mOverhead.config_kP(0, Constants.kShooterP, Constants.kLongCANTimeoutMs);
-        mOverhead.config_kI(0, Constants.kShooterI, Constants.kLongCANTimeoutMs);
-        mOverhead.config_kD(0, Constants.kShooterD, Constants.kLongCANTimeoutMs);
-        mOverhead.config_kF(0, Constants.kShooterF, Constants.kLongCANTimeoutMs);
+        mOverhead.config_kP(0, Constants.kShooterOverheadP, Constants.kLongCANTimeoutMs);
+        mOverhead.config_kI(0, Constants.kShooterOverheadI, Constants.kLongCANTimeoutMs);
+        mOverhead.config_kD(0, Constants.kShooterOverheadD, Constants.kLongCANTimeoutMs);
+        mOverhead.config_kF(0, Constants.kShooterOverheadF, Constants.kLongCANTimeoutMs);
         mOverhead.config_IntegralZone(0, (int) (200.0 / kFlywheelVelocityConversion));
         mOverhead.selectProfileSlot(0, 0);
  
@@ -175,10 +175,10 @@ public class Shooter extends Subsystem {
     }
 
     public synchronized boolean spunUp() {
-        if (mPeriodicIO.flywheel_demand > 0 && mPeriodicIO.overhead_demand > 0) {
+        if (Math.abs(mPeriodicIO.flywheel_demand) > 0 && Math.abs(mPeriodicIO.overhead_demand) > 0) {
             return Util.epsilonEquals(mPeriodicIO.flywheel_demand, mPeriodicIO.flywheel_velocity, kFlywheelTolerance) &&
                     Util.epsilonEquals(mPeriodicIO.overhead_demand, mPeriodicIO.overhead_velocity, kOverheadTolerance);
-        }
+            }
         return false;
     }
 
