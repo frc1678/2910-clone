@@ -242,7 +242,7 @@ public class Hood extends Subsystem {
         SmartDashboard.putNumber("Hood Motor Position (ticks)", mPeriodicIO.motor_position);
         SmartDashboard.putNumber("Hood Motor Position (degrees)", mPeriodicIO.motor_position / Constants.kHoodGearRatio);
         SmartDashboard.putNumber("Hood Angle", getHoodAngle());
-        SmartDashboard.putNumber("Hood Goal", mPeriodicIO.setpoint);
+        // SmartDashboard.putNumber("Hood Goal", mPeriodicIO.setpoint);
         
         if (mCSVWriter != null) {
             mCSVWriter.write();

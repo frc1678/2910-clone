@@ -40,7 +40,7 @@ public class Indexer extends Subsystem {
 
     private static double kIdleVoltage = 0.0;
     private static double kIndexingVoltage = 5.0;
-    private static double kFeedingVoltage = 12.0;
+    private static double kFeedingVoltage = 8.0;
     private static final double kIndexTime = 1.0;
 
     private static double mLastTimestamp = 0.0;

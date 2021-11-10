@@ -32,6 +32,7 @@ public class Vision implements Subsystem {
     private final NetworkTableEntry dXOuterEntry;
     private final NetworkTableEntry dYOuterEntry;
     private final NetworkTableEntry canSeeInnerTargetEntry;
+    private final NetworkTableEntry hasTargetEntry;
 
     private boolean hasTarget;
     private boolean isInnerTargetVisible;
@@ -55,6 +56,10 @@ public class Vision implements Subsystem {
                 .getEntry();
         canSeeInnerTargetEntry = tab.add("can see inner target", false)
                 .withPosition(3, 0)
+                .withSize(1, 1)
+                .getEntry();
+        hasTargetEntry = tab.add("Has Target", false)
+                .withPosition(4, 0)
                 .withSize(1, 1)
                 .getEntry();
         tab.addNumber("target angle", () -> Math.toDegrees(getAngleToTarget().orElse(Double.NaN)))
@@ -109,6 +114,7 @@ public class Vision implements Subsystem {
     public void periodic() {
         // Determine whether the Limelight has a target or not
         hasTarget = LIMELIGHT.hasTarget();
+        hasTargetEntry.setBoolean(hasTarget);
         if (hasTarget) {
             // Calculate the distance to the outer target
             Vector2 targetPosition = LIMELIGHT.getTargetPosition();

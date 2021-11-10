@@ -6,8 +6,10 @@ import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.loops.ILooper;
 import com.team1678.frc2021.loops.Loop;
 import com.team1678.frc2021.states.ShooterRegression;
+import com.team1678.frc2021.subsystems.Indexer.WantedAction;
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.Util;
+import com.team2910.lib.math.MathUtils;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -36,11 +38,11 @@ public class Superstructure extends Subsystem {
     // private final Vision mVisionTracker = new Vision(mSwerve);
     
     /* Setpoint variables */
-    private double mHoodSetpoint = 50.0;;
+    private double mHoodSetpoint = 30.0;;
     private double mShooterSetpoint = 0.0;
 
     // Superstructure constants
-    private final double kSpitVelocity = 1000;
+    private final double kSpitVelocity = 200;
 
     /* SUPERSTRUCTURE FUNCTIONS */
     private boolean mWantsTuck = false;
@@ -82,7 +84,6 @@ public class Superstructure extends Subsystem {
     public synchronized void setWantShoot() {
         mWantsPrep = false;
         mWantsShoot = !mWantsShoot;
-        mIsSpunUp = false;
     }
 
     public synchronized void setWantTestSpit() {
@@ -141,45 +142,56 @@ public class Superstructure extends Subsystem {
 
     /* UPDATE AND SET ALL SETPOINTS */
     public void setSetpoints() {
-        /* Default indexer wanted action */
-        Indexer.WantedAction real_indexer = Indexer.WantedAction.NONE;
+        /* Default indexer wanted action to be set */
+        Indexer.WantedAction real_indexer;
         /* Real hood angle setpoint to be set */
-        double real_hood = mHoodSetpoint;
+        double real_hood;
         /* Real shooter velocity setpoint to be set */
-        double real_shooter = mShooterSetpoint;
+        double real_shooter;
         // status variable tracker for whether shooter is spun up
         mIsSpunUp = mShooter.spunUp(); 
 
-        if (mIntake.getState() == Intake.State.INTAKING) {
-            real_indexer = Indexer.WantedAction.INDEX;
-        } else if (mIntake.getState() == Intake.State.REVERSING) {
-            real_indexer = Indexer.WantedAction.REVERSE;
-        }
-
         if (mWantsTuck) {
+            real_indexer = Indexer.WantedAction.NONE;
             real_hood = Constants.kHoodMinLimit;
             real_shooter = 0.0;
         }
 
         if (mWantsPrep) {
+            real_indexer = Indexer.WantedAction.NONE;
             real_hood = mHoodSetpoint;
-            real_shooter = 1500/*mShooterSetpoint*/;
+            real_shooter = 500/*mShooterSetpoint*/;
         } else if (mWantsShoot) {
             real_hood = mHoodSetpoint;
-            real_shooter = 1500/*mShooterSetpoint*/;
-
-            // if (mIsSpunUp) {
-                real_indexer = Indexer.WantedAction.FEED;
-            //}
+            real_shooter = 500/*mShooterSetpoint*/;
+            real_indexer = Indexer.WantedAction.FEED;
         } else if (mWantsSpit) {
             real_hood = Constants.kHoodMinLimit;
             real_shooter = kSpitVelocity;
+            real_indexer = Indexer.WantedAction.FEED;
+        } else {
+            real_indexer = Indexer.WantedAction.NONE;
+            real_hood = mHoodSetpoint;
+            real_shooter = 0.0;
         }
 
-        /* FOLLOW HOOD, SHOOTER, AND INDEXER GOALS */
+        // clamp the hood goal between min and max hard stops for hood angle
+        real_hood = MathUtils.clamp(real_hood, Constants.kHoodMinLimit, Constants.kHoodMaxLimit);
+
+        /* FOLLOW HOOD AND SHOOTER GOALS */
         mHood.setSetpointMotionMagic(real_hood);
         mShooter.setVelocity(real_shooter);
-        mIndexer.setState(real_indexer);
+
+        /* SET INDEXER STATE */
+        if (mIntake.getState() == Intake.State.INTAKING) {
+            mIndexer.setState(Indexer.WantedAction.INDEX);
+        } else if (mIntake.getState() == Intake.State.REVERSING) {
+            mIndexer.setState(Indexer.WantedAction.REVERSE);
+        } else if (mShooter.spunUp()) {
+            mIndexer.setState(real_indexer);
+        } else {
+            mIndexer.setState(Indexer.WantedAction.NONE);
+        }
 
         formal_hood = real_hood;
         formal_shooter = real_shooter;
@@ -216,7 +228,7 @@ public class Superstructure extends Subsystem {
         SmartDashboard.putString("Indexer Goal", formal_indexer.toString());
 
         // Other status tracker variables
-        SmartDashboard.putBoolean("Shooter Spun Up", mIsSpunUp);
+        SmartDashboard.putBoolean("Is Spun Up", mIsSpunUp);
         
         // Formal superstructure function values
         SmartDashboard.putBoolean("Wants Tuck", mWantsTuck);
