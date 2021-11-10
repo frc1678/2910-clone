@@ -71,6 +71,18 @@ public class GamepadButtonControlBoard {
         return mController.getButton(Button.START);
     }
 
+    public int getHoodManualSet() {
+        int pov_read = mController.getController().getPOV();
+        switch(pov_read){
+            case 0:
+                return 1;
+            case 180:
+                return -1;
+            default:
+                return 0;
+        }
+    }
+
     public boolean getShoot() {
         return mController.getController().getYButtonPressed();
     }

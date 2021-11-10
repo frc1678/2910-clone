@@ -3,6 +3,7 @@ package com.team1678.frc2021.subsystems;
 import java.util.OptionalDouble;
 
 import com.team1678.frc2021.Constants;
+import com.team1678.frc2021.controlboard.ControlBoard;
 import com.team1678.frc2021.loops.ILooper;
 import com.team1678.frc2021.loops.Loop;
 import com.team1678.frc2021.states.ShooterRegression;
@@ -33,12 +34,13 @@ public class Superstructure extends Subsystem {
     private final Indexer mIndexer = Indexer.getInstance();
     private final Shooter mShooter = Shooter.getInstance();
     private final Hood mHood = Hood.getInstance();
+    private final ControlBoard mControlBoard = ControlBoard.getInstance();
     
     // private final Swerve mSwerve = new Swerve();
     // private final Vision mVisionTracker = new Vision(mSwerve);
     
     /* Setpoint variables */
-    private double mHoodSetpoint = 30.0;;
+    private double mHoodSetpoint = 50.0;
     private double mShooterSetpoint = 0.0;
 
     // Superstructure constants
@@ -171,7 +173,21 @@ public class Superstructure extends Subsystem {
             real_indexer = Indexer.WantedAction.FEED;
         } else {
             real_indexer = Indexer.WantedAction.NONE;
+            
+            switch(mControlBoard.getManualHoodSet()){
+                case 1:
+                    mHoodSetpoint += 1;
+                    break;
+                case -1:
+                    mHoodSetpoint += -1;
+                    break;
+                case 0:
+                    mHoodSetpoint += 0;;
+                    break;
+            }
+            
             real_hood = mHoodSetpoint;
+
             real_shooter = 0.0;
         }
 

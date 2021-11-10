@@ -51,6 +51,10 @@ public class ControlBoard {
         return mButtonControlBoard.getShooterReset();
     }
 
+    public int getManualHoodSet() {
+        return mButtonControlBoard.getHoodManualSet();
+    }
+
     public boolean getShoot() {
         return mButtonControlBoard.getShoot();
     }
