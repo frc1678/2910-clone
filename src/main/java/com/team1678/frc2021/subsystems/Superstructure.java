@@ -157,9 +157,7 @@ public class Superstructure extends Subsystem {
             real_indexer = Indexer.WantedAction.NONE;
             real_hood = Constants.kHoodMinLimit;
             real_shooter = 0.0;
-        }
-
-        if (mWantsPrep) {
+        } else if (mWantsPrep) {
             real_indexer = Indexer.WantedAction.NONE;
             real_hood = mHoodSetpoint;
             real_shooter = 500/*mShooterSetpoint*/;

@@ -80,7 +80,6 @@ public class Hood extends Subsystem {
 
         // config encoder
         mEncoder = new AnalogEncoder(Constants.kHoodAbsoluteEncoderID);
-        // mEncoder.reset();
         mEncoder.setDistancePerRotation(kEncoderDistancePerRotation); // ticks per rotation
 
     }
