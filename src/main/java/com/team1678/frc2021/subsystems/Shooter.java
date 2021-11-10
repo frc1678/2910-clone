@@ -145,11 +145,6 @@ public class Shooter extends Subsystem {
         });
     }
 
-    public synchronized void setOpenLoop(double flywheel) {
-        mPeriodicIO.flywheel_demand = flywheel;
-        mRunningManual = true;
-    }
-
     public synchronized double getFlywheelVoltage() {
         return mPeriodicIO.flywheel_demand;
     }
@@ -180,6 +175,13 @@ public class Shooter extends Subsystem {
                     Util.epsilonEquals(mPeriodicIO.overhead_demand, mPeriodicIO.overhead_velocity, kOverheadTolerance);
             }
         return false;
+    }
+
+    // /* set open loop demand */
+    public synchronized void setOpenLoop(double demand) {
+        mPeriodicIO.flywheel_demand = demand;
+        mPeriodicIO.overhead_demand = -demand;
+        mRunningManual = true;
     }
 
     /* set shooter velocity to a direct velocity given as a parameter and spin up */
@@ -231,8 +233,8 @@ public class Shooter extends Subsystem {
             mMaster.set(ControlMode.Velocity, mPeriodicIO.flywheel_demand / kFlywheelVelocityConversion);
             mOverhead.set(ControlMode.Velocity, mPeriodicIO.overhead_demand / kOverheadVelocityConversion);
         } else {
-            mMaster.set(ControlMode.Disabled, 0.0);
-            mOverhead.set(ControlMode.Disabled, 0.0);
+            mMaster.set(ControlMode.PercentOutput, 0);
+            mOverhead.set(ControlMode.PercentOutput, 0);
         }
     }
 

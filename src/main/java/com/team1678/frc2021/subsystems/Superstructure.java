@@ -172,6 +172,7 @@ public class Superstructure extends Subsystem {
         } else {
             real_indexer = Indexer.WantedAction.NONE;
             
+            // read inputs for manual hood setting
             switch(mControlBoard.getManualHoodSet()){
                 case 1:
                     mHoodSetpoint += 1;
@@ -183,7 +184,6 @@ public class Superstructure extends Subsystem {
                     mHoodSetpoint += 0;;
                     break;
             }
-            
             real_hood = mHoodSetpoint;
 
             real_shooter = 0.0;
@@ -192,9 +192,15 @@ public class Superstructure extends Subsystem {
         // clamp the hood goal between min and max hard stops for hood angle
         real_hood = MathUtils.clamp(real_hood, Constants.kHoodMinLimit, Constants.kHoodMaxLimit);
 
-        /* FOLLOW HOOD AND SHOOTER GOALS */
+        /* FOLLOW HOOD SETPOINT GOAL */
         mHood.setSetpointMotionMagic(real_hood);
-        mShooter.setVelocity(real_shooter);
+
+        /* FOLLOW HOOD SETPOINT GOAL */
+        if (Math.abs(real_shooter) < Util.kEpsilon) {
+            mShooter.setOpenLoop(0); // open loop if rpm goal is 0, to smooth spin down and stop belt skipping
+        } else {
+            mShooter.setVelocity(real_shooter);
+        }
 
         /* SET INDEXER STATE */
         if (mIntake.getState() == Intake.State.INTAKING) {
@@ -207,6 +213,7 @@ public class Superstructure extends Subsystem {
             mIndexer.setState(Indexer.WantedAction.NONE);
         }
 
+        // update tracker variables for goals for smart dashboard readings
         formal_hood = real_hood;
         formal_shooter = real_shooter;
         formal_indexer = real_indexer;
