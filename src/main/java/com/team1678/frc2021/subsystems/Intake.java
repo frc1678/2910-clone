@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class Intake extends Subsystem {
 
-    private static double kIntakingVoltage = 3.0;
+    private static double kIntakingVoltage = 6.0;
     private static double kIdleVoltage = 0;
     private static double mCurrent;
 
