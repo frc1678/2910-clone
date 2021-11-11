@@ -39,7 +39,7 @@ public class Indexer extends Subsystem {
     private TimeDelayedBoolean mIntakeProxyTimer = new TimeDelayedBoolean();  
 
     private static double kIdleVoltage = 0.0;
-    private static double kIndexingVoltage = 5.0;
+    private static double kIndexingVoltage = 7.0;
     private static double kFeedingVoltage = 8.0;
     private static final double kIndexTime = 1.0;
 
@@ -158,7 +158,7 @@ public class Indexer extends Subsystem {
     public synchronized void readPeriodicInputs() {
         mPeriodicIO.timestamp = Timer.getFPGATimestamp();
         mPeriodicIO.current = mMaster.getStatorCurrent();
-        mPeriodicIO.lower_break = mIntakeProxyTimer.update(mCanifier.getIntakeBeamBreak(), 0.2);
+        mPeriodicIO.lower_break = mIntakeProxyTimer.update(mCanifier.getIntakeBeamBreak(), 0.0);
         mPeriodicIO.upper_break = mCanifier.getShooterBeamBreak();
     }
 
