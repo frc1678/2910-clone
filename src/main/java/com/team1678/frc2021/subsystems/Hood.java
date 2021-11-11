@@ -36,7 +36,7 @@ public class Hood extends Subsystem {
 
     private final TalonFX mMaster;
     private final AnalogEncoder mEncoder;
-    private final int kEncoderDistancePerRotation = 25100;
+    private final int kEncoderDistancePerRotation = 0; // 25100;
     protected ControlState mControlState = ControlState.OPEN_LOOP;
 
     private PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -49,7 +49,7 @@ public class Hood extends Subsystem {
         // if (hoodWasReset) {
         //     return;
         // }
-        double absolute_position = getHoodDegreesToTicks(getTicksToHoodDegrees(mEncoder.getDistance()) - (Constants.kHoodEncoderOffset - Constants.kHoodMinLimit));
+        double absolute_position = getHoodDegreesToTicks(/*getTicksToHoodDegrees(mEncoder.getDistance()) - (Constants.kHoodEncoderOffset - */Constants.kHoodMinLimit);
         mMaster.setSelectedSensorPosition(absolute_position);
         hoodWasReset = true;
         System.out.println("resetting hood!");
@@ -80,6 +80,7 @@ public class Hood extends Subsystem {
 
         // config encoder
         mEncoder = new AnalogEncoder(Constants.kHoodAbsoluteEncoderID);
+        mEncoder.reset();
         mEncoder.setDistancePerRotation(kEncoderDistancePerRotation); // ticks per rotation
 
     }
