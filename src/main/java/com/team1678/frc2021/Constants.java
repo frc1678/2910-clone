@@ -19,6 +19,7 @@ import com.team2910.lib.math.Vector2;
 
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.util.Units;
 
@@ -461,7 +462,13 @@ public class Constants {
         // Constraint for the motion profilied robot angle controller
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
             new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+				kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+				
+		public static final TrajectoryConfig defaultConfig = 
+			new TrajectoryConfig(
+					Constants.AutoConstants.kMaxSpeedMetersPerSecond,
+					Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+				.setKinematics(Constants.Swerve.swerveKinematics);
 	  }
 	  
 }
