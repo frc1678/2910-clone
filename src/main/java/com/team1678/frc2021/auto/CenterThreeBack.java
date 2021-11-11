@@ -3,7 +3,9 @@ package com.team1678.frc2021.auto;
 import java.util.List;
 
 import com.team1678.frc2021.Constants;
+import com.team1678.frc2021.commands.AutoVisionRotateToTargetCommand;
 import com.team1678.frc2021.commands.ShootCommand;
+import com.team1678.frc2021.subsystems.Limelight;
 import com.team1678.frc2021.subsystems.Superstructure;
 import com.team1678.frc2021.subsystems.Swerve;
 
@@ -22,6 +24,7 @@ public class CenterThreeBack extends SequentialCommandGroup{
     public CenterThreeBack(Swerve s_Swerve) {
         
         final Superstructure mSuperstructure = Superstructure.getInstance();
+        final Limelight mLimelight = Limelight.getInstance();
         
         var thetaController =
             new ProfiledPIDController(
@@ -51,8 +54,12 @@ public class CenterThreeBack extends SequentialCommandGroup{
         ShootCommand shoot =
             new ShootCommand(mSuperstructure);
 
+        AutoVisionRotateToTargetCommand vision =
+            new AutoVisionRotateToTargetCommand(s_Swerve, mLimelight);
+
         addCommands(
             new InstantCommand(() -> s_Swerve.resetOdometry(new Pose2d(2.9, 5.84, Rotation2d.fromDegrees(0.0)))),
+            vision,
             shoot,
             moveBackCommand
         );
