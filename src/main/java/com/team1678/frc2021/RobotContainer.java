@@ -31,7 +31,7 @@ public class RobotContainer {
 
   /* Required instances */
   private final Swerve drivetrainSubsystem = new Swerve();
-  private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
+  private final Limelight limelight = Limelight.getInstance();
 
   /* Drive Controls */
   private final int translationAxis = XboxController.Axis.kLeftY.value;
@@ -78,7 +78,7 @@ public class RobotContainer {
     aButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(180)));
     xButton.whenPressed(new InstantCommand(() -> s_Swerve.startSnap(270))); 
     
-    rightBumper.whileHeld(new VisionRotateToTargetCommand(s_Swerve, visionSubsystem, translationAxis, strafeAxis, driver));
+    rightBumper.whileHeld(new VisionRotateToTargetCommand(s_Swerve, limelight, translationAxis, strafeAxis, driver));
   }
 
   /**

@@ -5,6 +5,7 @@ import javax.annotation.concurrent.GuardedBy;
 import com.team1678.frc2021.Constants;
 import com.team1678.frc2021.SwerveModule;
 import com.team1678.lib.util.TimeDelayedBoolean;
+import com.team254.lib.util.CrashTracker;
 import com.team2910.lib.math.Rotation2;
 import com.team2910.lib.robot.Pigeon;
 
@@ -163,17 +164,22 @@ public class Swerve extends SubsystemBase {
     }
 
     @Override
-    public void periodic(){
-        swerveOdometry.update(getYaw(), getStates());  
+    public void periodic() {
+        try {
+            swerveOdometry.update(getYaw(), getStates());  
 
-        SmartDashboard.putBoolean("Is Snapping", isSnapping);
-        SmartDashboard.putNumber("Pigeon Heading", getYaw().getDegrees());
-        SmartDashboard.putNumber("Snap Target", Math.toRadians(snapPidController.getGoal().position));
+            SmartDashboard.putBoolean("Is Snapping", isSnapping);
+            SmartDashboard.putNumber("Pigeon Heading", getYaw().getDegrees());
+            SmartDashboard.putNumber("Snap Target", Math.toRadians(snapPidController.getGoal().position));
 
-        for(SwerveModule mod : mSwerveMods){
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getState().angle.getDegrees());
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond);    
+            for(SwerveModule mod : mSwerveMods){
+                SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
+                SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getState().angle.getDegrees());
+                SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond);    
+            }
+        } catch (Throwable t) {
+            CrashTracker.logThrowableCrash(t);
+            throw t;
         }
     }
 }

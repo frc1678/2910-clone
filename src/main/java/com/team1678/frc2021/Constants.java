@@ -9,6 +9,7 @@ import com.team1323.lib.util.InterpolatingTreeMap;
 // import com.team1678.frc2021.subsystems.Limelight.LimelightConstants;
 import com.team1678.lib.util.SwerveModuleConstants;
 import com.team1678.frc2021.subsystems.ServoMotorSubsystem;
+import com.team1678.frc2021.subsystems.Limelight.LimelightConstants;
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
 import com.team254.lib.geometry.Translation2d;
@@ -119,17 +120,16 @@ public class Constants {
 	public static final double kHoodCruiseAcceleration = 10;
 	public static final double kHoodDeadband = 0;
 
-	/*
+	
 	// limelight
 	 public static final LimelightConstants kLimelightConstants = new LimelightConstants();
 	 static {
 		 kLimelightConstants.kName = "Limelight";
 		 kLimelightConstants.kTableName = "limelight";
 		 kLimelightConstants.kHeight = 24.5; // inches
-		 kLimelightConstants.kTurretToLens = Pose2d.identity();
 		 kLimelightConstants.kHorizontalPlaneToLens = Rotation2d.fromRadians(34.0);
 	 }
-	 */
+	 
 
 	 public static final double kHorizontalFOV = 59.6; // degrees
 	 public static final double kVerticalFOV = 49.7; // degrees

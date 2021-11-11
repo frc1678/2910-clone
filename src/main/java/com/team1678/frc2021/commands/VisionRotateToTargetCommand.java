@@ -1,8 +1,8 @@
 package com.team1678.frc2021.commands;
 
 import com.team1678.frc2021.subsystems.Swerve;
-import com.team1678.frc2021.subsystems.Vision;
 import com.team1678.frc2021.SwerveTools;
+
 import com.team1678.frc2021.subsystems.Limelight;
 
 import edu.wpi.first.wpilibj.Joystick;
@@ -18,10 +18,10 @@ import com.team2910.lib.math.Vector2;
 import java.util.function.DoubleSupplier;
 
 public class VisionRotateToTargetCommand extends CommandBase {
-    private static final PidConstants PID_CONSTANTS = new PidConstants(1.0, 0.0, 0.05);
+    private static final PidConstants PID_CONSTANTS = new PidConstants(15.0, 0.0, 1.0);
 
     private final Swerve drivetrain;
-    private final Vision visionSubsystem;
+    private final Limelight limelight;
 
     private final int yJoystick;
     private final int xJoystick;
@@ -30,16 +30,15 @@ public class VisionRotateToTargetCommand extends CommandBase {
     private PidController pid_controller = new PidController(PID_CONSTANTS);
     private double lastTime = 0.0;
 
-    public VisionRotateToTargetCommand(Swerve drivetrain, Vision visionSubsystem,
+    public VisionRotateToTargetCommand(Swerve drivetrain, Limelight limelight,
                                        int yAxis, int xAxis, Joystick controller) {
         this.drivetrain = drivetrain;
-        this.visionSubsystem = visionSubsystem;
+        this.limelight = limelight;
         this.yJoystick = yAxis;
         this.xJoystick = xAxis;
         this.controller = controller;
 
         addRequirements(drivetrain);
-        addRequirements(visionSubsystem);
 
         pid_controller.setInputRange(0.0, 2.0 * Math.PI);
         pid_controller.setContinuous(true);
@@ -48,8 +47,7 @@ public class VisionRotateToTargetCommand extends CommandBase {
     @Override
     public void initialize() {
         lastTime = Timer.getFPGATimestamp();
-        visionSubsystem.setCamMode(Limelight.CamMode.VISION);
-        visionSubsystem.setSnapshotEnabled(true);
+        limelight.setCamMode(0);
         pid_controller.reset();
     }
     
@@ -67,14 +65,15 @@ public class VisionRotateToTargetCommand extends CommandBase {
         Translation2d translationalVelocity = SwerveTools.applyTranslationalDeadband(new Translation2d(yAxis, xAxis));
 
         double rotationalVelocity = 0.0;
-        if (visionSubsystem.hasTarget()) {
+        if (limelight.seesTarget()) {
             System.out.println("running inside");
 
             double currentAngle = drivetrain.getPose().getRotation().getRadians();
-            double targetAngle = visionSubsystem.getAngleToTarget().getAsDouble();
+            double targetOffset = Math.toRadians(limelight.getTargetOffset().getAsDouble());
 
-            pid_controller.setSetpoint(targetAngle);
+            pid_controller.setSetpoint(currentAngle + targetOffset);
             rotationalVelocity = pid_controller.calculate(currentAngle, dt);
+            System.out.println(rotationalVelocity);
 
             /*
             if (translationalVelocity.length <
@@ -91,6 +90,6 @@ public class VisionRotateToTargetCommand extends CommandBase {
 
     @Override
     public void end(boolean interrupted) {
-        visionSubsystem.setSnapshotEnabled(false);
+        // empty
     }
 }
