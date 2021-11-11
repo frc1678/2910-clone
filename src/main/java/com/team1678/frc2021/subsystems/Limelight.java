@@ -1,266 +1,433 @@
 package com.team1678.frc2021.subsystems;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import com.team2910.lib.math.MathUtils;
+import com.team1678.frc2021.Constants;
+import com.team1678.frc2021.RobotState;
+
+import com.team1678.frc2021.loops.Loop;
+import com.team1678.frc2021.loops.ILooper;
+
+import com.team254.lib.geometry.Pose2d;
+import com.team254.lib.geometry.Rotation2d;
+import com.team254.lib.geometry.Translation2d;
+import com.team254.lib.util.ReflectingCSVWriter;
+import com.team254.lib.util.Util;
+import com.team254.lib.vision.TargetInfo;
 import com.team2910.lib.math.Vector2;
 
-public final class Limelight {
-    private static Limelight mInstance;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-    private final NetworkTable table;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
-    private final NetworkTableEntry tv;
-    private final NetworkTableEntry tx;
-    private final NetworkTableEntry ty;
-    private final NetworkTableEntry ta;
-    private final NetworkTableEntry ts;
-    private final NetworkTableEntry tl;
+/**
+ * Subsystem for interacting with the Limelight 2
+ */
+public class Limelight extends Subsystem {
+    public final static int kDefaultPipeline = 0;
+    public final static int kZoomedInPipeline = 1;
 
-    private final NetworkTableEntry tcornx;
-    private final NetworkTableEntry tcorny;
+    private static Limelight mInstance = null;
 
-    private final NetworkTableEntry ledMode;
-    private final NetworkTableEntry camMode;
-    private final NetworkTableEntry pipeline;
-    private final NetworkTableEntry stream;
-    private final NetworkTableEntry snapshot;
+    private ReflectingCSVWriter<PeriodicIO> mCSVWriter = null;
 
-    /**
-     * Creates an instance of the Limelight, assuming the name is "limelight".
-     */
-    public Limelight() {
-        this(NetworkTableInstance.getDefault().getTable("limelight"));
+    private int mLatencyCounter = 0;
+
+    public static class LimelightConstants {
+        public String kName;
+        public String kTableName;
+        public double kHeight;
+        public Rotation2d kHorizontalPlaneToLens;
     }
-    
-    public static synchronized Limelight getInstance() {
+
+    private NetworkTable mNetworkTable;
+
+    private Limelight() {
+        mConstants = Constants.kLimelightConstants;
+        mNetworkTable = NetworkTableInstance.getDefault().getTable(mConstants.kTableName);
+    }
+
+    public static Limelight getInstance() {
         if (mInstance == null) {
             mInstance = new Limelight();
         }
+
         return mInstance;
     }
 
-    /**
-     * Creates an instance of the Limelight class given the name of the Limelight. For example,
-     * if the Limelight is called "limelight-cargo", pass in "cargo".
-     * @param name The name of the Limelight.
-     */
-    public Limelight(String name) {
-        this(NetworkTableInstance.getDefault().getTable("limelight-" + name));
+    @Override
+    public void registerEnabledLoops(ILooper mEnabledLooper) {
+        Loop mLoop = new Loop() {
+            @Override
+            public void onStart(double timestamp) {
+              //  RobotState.getInstance().resetVision();
+            }
+
+            @Override
+            public void onLoop(double timestamp) {
+                synchronized (this) {
+                    periodic();
+                    // if ((Hood.getInstance().getAtGoal() || Superstructure.getInstance().getScanningHood())
+                    //         && !Superstructure.getInstance().getTucked() && !Superstructure.getInstance().getWantSpit()
+                    //         && mPeriodicIO.has_comms && !Superstructure.getInstance().getDisableLimelight()) {
+                    //     RobotState.getInstance().addVisionUpdate(timestamp - getLatency(), getTarget());
+                    // } else {
+                        RobotState.getInstance().addVisionUpdate(timestamp - getLatency(), null);
+                    // }
+                    //startLogging();
+                }
+
+            }
+
+            @Override
+            public void onStop(double timestamp) {
+                stop();
+                stopLogging();
+            }
+        };
+        mEnabledLooper.register(mLoop);
     }
 
-    /**
-     * Creates an instance of the Limelight class given its NetworkTable.
-     * @param table The NetworkTable used to create the Limelight.
-     */
-    public Limelight(NetworkTable table) {
-        this.table = table;
-
-        tv = table.getEntry("tv");
-        tx = table.getEntry("tx");
-        ty = table.getEntry("ty");
-        ta = table.getEntry("ta");
-        ts = table.getEntry("ts");
-        tl = table.getEntry("tl");
-
-        tcornx = table.getEntry("tcornx");
-        tcorny = table.getEntry("tcorny");
-
-        ledMode = table.getEntry("ledMode");
-        camMode = table.getEntry("camMode");
-        pipeline = table.getEntry("pipeline");
-        stream = table.getEntry("stream");
-        snapshot = table.getEntry("snapshot");
+    public synchronized boolean limelightOK() {
+        return mPeriodicIO.has_comms;
     }
 
-    /**
-     * Checks if the method has a target.
-     * @returns Whether the Limelight has a target.
-     */
-    public boolean hasTarget() {
-        return MathUtils.epsilonEquals(tv.getDouble(0), 1);
+    public static class PeriodicIO {
+        // INPUTS
+        public double latency;
+        public int givenLedMode;
+        public int givenPipeline;
+        public double xOffset;
+        public double yOffset;
+        public double area;
+        public boolean has_comms;
+        public OptionalDouble distanceToTarget = OptionalDouble.empty();
+        public OptionalDouble angleToTarget = OptionalDouble.empty();
+        public boolean innerTargetVisible;
+
+        // OUTPUTS
+        public int ledMode = 1; // 0 - use pipeline mode, 1 - off, 2 - blink, 3 - on
+        public int camMode = 0; // 0 - vision processing, 1 - driver camera
+        public int pipeline = 0; // 0 - 9
+        public int stream = 2; // sets stream layout if another webcam is attached
+        public int snapshot = 0; // 0 - stop snapshots, 1 - 2 Hz
+    }
+    
+    private LimelightConstants mConstants = null;
+    private PeriodicIO mPeriodicIO = new PeriodicIO();
+    private boolean mOutputsHaveChanged = true;
+    private double[] mZeroArray = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    private List<TargetInfo> mTargets = new ArrayList<>();
+    private boolean mSeesTarget = false;
+    private boolean innerTargetVisible = false;
+
+    public double getLensHeight() {
+        return mConstants.kHeight;
     }
 
-    /**
-     * Gets the area of the target divided by the size of the image.
-     * @returns A value from 0.0 to 1.0 representing the target area.
-     */
-    public double getTargetArea() {
-        return ta.getDouble(0);
+    public Rotation2d getHorizontalPlaneToLens() {
+        return mConstants.kHorizontalPlaneToLens;
     }
 
-    /**
-     * Gets the position of the target in radians within the image.
-     * @returns The position of the target.
-     */
-    public Vector2 getTargetPosition() {
-        return new Vector2(Math.toRadians(tx.getDouble(0)), Math.toRadians(ty.getDouble(0)));
+    private void periodic() {
+
+         if (mSeesTarget) {
+             // Calculate the distance to the outer target
+             Vector2 targetPosition = getTargetPosition();
+             double theta = getHorizontalPlaneToLens().getRadians() + targetPosition.y;
+             double distanceToOuterTarget = (Constants.TARGET_HEIGHT - Constants.LIMELIGHT_HEIGHT) / Math.tan(theta);
+ 
+             // Get the field oriented angle for the outer target, with *no* latency compensation
+             double angleToOuter = Swerve.getInstance().getPose().getRotation().getRadians() - targetPosition.x;
+             double dYOuter = distanceToOuterTarget * Math.sin(angleToOuter);
+             double dXOuter = distanceToOuterTarget * Math.cos(angleToOuter);
+
+             // Calculate the distance to the inner target
+             double dXInner = dXOuter + Constants.kInnerGoalDepth;
+             double distanceToInnerTarget = Math.hypot(dXInner, dYOuter);
+             // Add DISTANCE_FROM_INNER_TO_APEX to dXInner here because we want if we did it when we defined dXInner
+             // distanceToInnerTarget would be incorrect, and we only need this extra bit to determine if we can see
+             // the inner target
+             double angleToApex = Math.atan(dYOuter / (dXInner + Constants.kInnerGoalToApex));
+             if (angleToApex < 0.0) {
+                 angleToApex += 2 * Math.PI;
+             }
+             double angleToInner = Math.atan(dYOuter / dXInner);
+             if (angleToInner < 0.0) {
+                 angleToInner += 2 * Math.PI;
+             }
+ 
+             // Check whether we can see the inner target
+             innerTargetVisible = angleToApex <= Constants.kInnerTargetRangeAngle || angleToApex >= 2 * Math.PI - Constants.kInnerTargetRangeAngle;
+             if (innerTargetVisible) {
+                 mPeriodicIO.distanceToTarget = OptionalDouble.of(distanceToInnerTarget);
+             } else {
+                 mPeriodicIO.distanceToTarget = OptionalDouble.of(distanceToOuterTarget);
+             }
+             mPeriodicIO.angleToTarget = OptionalDouble.of(angleToOuter);
+         } else {
+             mPeriodicIO.distanceToTarget = OptionalDouble.empty();
+             mPeriodicIO.angleToTarget = OptionalDouble.empty();
+             innerTargetVisible = false;
+         }
     }
 
-    /**
-     * Gets the target's skew or rotation in degrees.
-     * @returns The target's skew from -90 to 0 in degrees.
-     */
-    public double getTargetSkew() {
-        return ts.getDouble(0);
-    }
+    @Override
+    public synchronized void readPeriodicInputs() {
+        final double latency = mNetworkTable.getEntry("tl").getDouble(0) / 1000.0 + Constants.kImageCaptureLatency;
+        mPeriodicIO.givenLedMode = (int) mNetworkTable.getEntry("ledMode").getDouble(1.0);
+        mPeriodicIO.givenPipeline = (int) mNetworkTable.getEntry("pipeline").getDouble(0);
+        mPeriodicIO.xOffset = mNetworkTable.getEntry("tx").getDouble(0.0);
+        mPeriodicIO.yOffset = mNetworkTable.getEntry("ty").getDouble(0.0);
+        mPeriodicIO.area = mNetworkTable.getEntry("ta").getDouble(0.0);
 
-    /**
-     * Gets the latency of the pipeline in ms (milliseconds).
-     * @returns The latency of the pipeline in ms.
-     */
-    public double getPipelineLatency() {
-        return tl.getDouble(0.0);
-    }
-
-    /**
-     * Gets the vertices of the target.
-     * @returns The vertices of the target.
-     */
-    public double[][] getCorners() {
-        double[] x = tcornx.getDoubleArray(new double[]{0.0, 0.0});
-        double[] y = tcorny.getDoubleArray(new double[]{0.0, 0.0});
-        double[][] corners = new double[x.length][2];
-        for (int i = 0; i < x.length; i++) {
-            corners[i][0] = x[i];
-            corners[i][1] = y[i];
-        }
-        return corners;
-    }
-
-    /**
-     * Sets the operating mode of the Limelight.
-     * @param mode The operating mode the Limelight should be set to.
-     */
-    public void setCamMode(CamMode mode) {
-        switch (mode) {
-            case VISION:
-                camMode.setNumber(0);
-                break;
-            case DRIVER:
-                camMode.setNumber(1);
-        }
-    }
-
-    /**
-     * Sets the mode of the LED's of the Limelight.
-     * @param mode The mode the LED's should be set to.
-     */
-    public void setLedMode(LedMode mode) {
-        switch (mode) {
-            case DEFAULT:
-                ledMode.setNumber(0);
-                break;
-            case OFF:
-                ledMode.setNumber(1);
-                break;
-            case BLINK:
-                ledMode.setNumber(2);
-                break;
-            case ON:
-                ledMode.setNumber(3);
-                break;
-        }
-    }
-
-    /**
-     * Sets whether you want the Limelight to take snapshots or not. When it's taking snapshots, it will do it
-     * twice every second.
-     * @param enabled Whether snapshots should be enabled.
-     */
-    public void setSnapshotsEnabled(boolean enabled) {
-        if (enabled) {
-            snapshot.setNumber(1);
+        if (latency == mPeriodicIO.latency) {
+            mLatencyCounter++;
         } else {
-            snapshot.setNumber(0);
+            mLatencyCounter = 0;
+        }
+
+        mPeriodicIO.latency = latency;
+        mPeriodicIO.has_comms = mLatencyCounter < 10;
+
+        mSeesTarget = mNetworkTable.getEntry("tv").getDouble(0) == 1.0;
+        if (mCSVWriter != null) {
+            mCSVWriter.add(mPeriodicIO);
         }
     }
 
-    /**
-     * Sets which pipeline you want to use (0-9).
-     * @param pipeline The index of the desired pipeline.
-     */
-    public void setPipeline(int pipeline) {
-        this.pipeline.setNumber(pipeline);
-    }
+    @Override
+    public synchronized void writePeriodicOutputs() {
+        if (mPeriodicIO.givenLedMode != mPeriodicIO.ledMode || mPeriodicIO.givenPipeline != mPeriodicIO.pipeline) {
+            System.out.println("Table has changed from expected, retrigger!!");
+            mOutputsHaveChanged = true;
+        }
+        if (mOutputsHaveChanged) {
 
-    /**
-     * Changes what the Limelight streams.
-     * @param mode What the Limelight should be streaming.
-     */
-    public void setStreamMode(StreamMode mode) {
-        switch (mode) {
-            case STANDARD:
-                stream.setNumber(0);
-                break;
-            case PIP_MAIN:
-                stream.setNumber(1);
-                break;
-            case PIP_SECONDARY:
-                stream.setNumber(2);
-                break;
+            mNetworkTable.getEntry("ledMode").setNumber(mPeriodicIO.ledMode);
+            mNetworkTable.getEntry("camMode").setNumber(mPeriodicIO.camMode);
+            mNetworkTable.getEntry("pipeline").setNumber(mPeriodicIO.pipeline);
+            mNetworkTable.getEntry("stream").setNumber(mPeriodicIO.stream);
+            mNetworkTable.getEntry("snapshot").setNumber(mPeriodicIO.snapshot);
+
+            mOutputsHaveChanged = false;
         }
     }
 
-    /**
-     * Gets the NetworkTable being used to get values from the Limelight.
-     */
-    public NetworkTable getTable() {
-        return table;
+    @Override
+    public void stop() {
     }
 
-    /**
-     * Represents the different operating modes of the Limelight.
-     */
-    public enum CamMode {
-        /**
-         * Brings the exposure down and runs the pipeline
-         */
-        VISION,
-        /**
-         * Disables the pipeline, and brings the exposure up
-         */
-        DRIVER
+    @Override
+    public boolean checkSystem() {
+        return true;
     }
 
-    /**
-     * Represents the different LED modes of the Limelight
-     */
+    public synchronized void startLogging() {
+        if (mCSVWriter == null) {
+            mCSVWriter = new ReflectingCSVWriter<>("/home/lvuser/LIMELIGHT-LOGS.csv", PeriodicIO.class);
+        }
+    }
+
+    public synchronized void stopLogging() {
+        if (mCSVWriter != null) {
+            mCSVWriter.flush();
+            mCSVWriter = null;
+        }
+    }
+
+    @Override
+    public synchronized void outputTelemetry() {
+        SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mSeesTarget);
+        SmartDashboard.putBoolean("Limelight Ok", mPeriodicIO.has_comms);
+        SmartDashboard.putNumber(mConstants.kName + ": Pipeline Latency (ms)", mPeriodicIO.latency);
+        SmartDashboard.putNumber("Limelight Target Angle", Math.toDegrees(getTargetAngle().orElse(0.0)));
+        SmartDashboard.putNumber("Target Distance", getTargetDistance().orElse(0.0));
+        if (mCSVWriter != null) {
+            mCSVWriter.write();
+        }
+    }
+
     public enum LedMode {
-        /**
-         * Sets the LED's to whatever is specified in the pipeline
-         */
-        DEFAULT,
-        /**
-         * Turns the LED's on
-         */
-        ON,
-        /**
-         * Turns the LED's off
-         */
-        OFF,
-        /**
-         * Makes the LED's blink
-         */
-        BLINK
+        PIPELINE, OFF, BLINK, ON
+    }
+
+    public synchronized void setLed(LedMode mode) {
+        if (mode.ordinal() != mPeriodicIO.ledMode) {
+            mPeriodicIO.ledMode = mode.ordinal();
+            mOutputsHaveChanged = true;
+        }
+    }
+
+    public synchronized void setPipeline(int mode) {
+        if (mode != mPeriodicIO.pipeline) {
+         //   RobotState.getInstance().resetVision();
+            mPeriodicIO.pipeline = mode;
+
+            System.out.println(mPeriodicIO.pipeline + ", " + mode);
+            mOutputsHaveChanged = true;
+        }
+    }
+
+    public synchronized void setCamMode(int mode) {
+        mPeriodicIO.camMode = mode;
+    }
+
+    public synchronized void triggerOutputs() {
+        mOutputsHaveChanged = true;
+    }
+
+    public synchronized int getPipeline() {
+        return mPeriodicIO.pipeline;
+    }
+
+    public synchronized boolean seesTarget() {
+        return mSeesTarget;
+    }
+
+    public synchronized Vector2 getTargetPosition() {
+        return new Vector2(Math.toRadians(mPeriodicIO.xOffset), Math.toRadians(mPeriodicIO.yOffset));
+    }
+
+    public synchronized OptionalDouble getTargetDistance(){
+        return mPeriodicIO.distanceToTarget;
+    }
+
+    public synchronized OptionalDouble getTargetAngle(){
+        return mPeriodicIO.angleToTarget;
+    }
+
+    public synchronized OptionalDouble getTargetOffset() {
+        return OptionalDouble.of(mPeriodicIO.xOffset);
     }
 
     /**
-     * Represents the different streaming modes of the camera
+     * @return two targets that make up one hatch/port or null if less than two
+     *         targets are found
      */
-    public enum StreamMode {
-        /**
-         * Side-by-side streams if a webcam is attached to Limelight
-         */
-        STANDARD,
-        /**
-         * The secondary camera stream is placed in the lower-right corner of the primary camera stream
-         */
-        PIP_MAIN,
-        /**
-         * The primary camera stream is placed in the lower-right corner of the secondary camera stream
-         */
-        PIP_SECONDARY
+    public synchronized List<TargetInfo> getTarget() {
+        List<TargetInfo> targets = new ArrayList<TargetInfo>(); //getRawTargetInfos();
+        targets.add(new TargetInfo(Math.tan(Math.toRadians(-mPeriodicIO.xOffset)), Math.tan(Math.toRadians(mPeriodicIO.yOffset))));
+        if (seesTarget() && targets != null) {
+            return targets;
+        }
+
+        return null;
+    }
+
+    private synchronized List<TargetInfo> getRawTargetInfos() {
+        List<double[]> corners = getTopCorners();
+        if (corners == null) {
+            return null;
+        }
+
+        double slope = 1.0;
+        if (Math.abs(corners.get(1)[0] - corners.get(0)[0]) > Util.kEpsilon) {
+            slope = (corners.get(1)[1] - corners.get(0)[1]) / (corners.get(1)[0] - corners.get(0)[0]);
+        }
+
+        mTargets.clear();
+        for (int i = 0; i < 2; ++i) {
+            // Average of y and z;
+            double y_pixels = corners.get(i)[0];
+            double z_pixels = corners.get(i)[1];
+
+            // Redefine to robot frame of reference.
+            double nY = -((y_pixels - 160.0) / 160.0);
+            double nZ = -((z_pixels - 120.0) / 120.0);
+
+            double y = Constants.kVPW / 2 * nY;
+            double z = Constants.kVPH / 2 * nZ;
+
+            TargetInfo target = new TargetInfo(y, z);
+            target.setSkew(slope);
+            mTargets.add(target);
+        }
+
+        return mTargets;
+    }
+
+    /**
+     * Returns raw top-left and top-right corners
+     *
+     * @return list of corners: index 0 - top left, index 1 - top right
+     */
+    private List<double[]> getTopCorners() {
+        double[] xyCorners = mNetworkTable.getEntry("tcornxy").getDoubleArray(mZeroArray);
+        ArrayList<Double> xCorners = new ArrayList<>();
+        ArrayList<Double> yCorners = new ArrayList<>();
+
+        for (int i = 0; i < xyCorners.length; i++) {
+            if (i % 2 == 0) {
+                xCorners.add(xyCorners[i]);
+            } else {
+                yCorners.add(xyCorners[i]);
+            }
+        }
+
+        mSeesTarget = mNetworkTable.getEntry("tv").getDouble(0) == 1.0;
+
+        double[] xCornersArray = xCorners.stream().mapToDouble(Double::doubleValue).toArray();
+        double[] yCornersArray = yCorners.stream().mapToDouble(Double::doubleValue).toArray();
+
+        // something went wrong
+
+        if (!mSeesTarget || Arrays.equals(xCornersArray, mZeroArray) || Arrays.equals(yCornersArray, mZeroArray)
+                || xCornersArray.length < 4 || xCornersArray.length != yCornersArray.length) {
+            return null;
+        }
+
+        return extractTopCornersFromBoundingBoxes(xCornersArray, yCornersArray);
+    }
+
+    private static final Comparator<Translation2d> xSort = Comparator.comparingDouble(Translation2d::x);
+    private static final Comparator<Translation2d> ySort = Comparator.comparingDouble(Translation2d::y);
+
+    /**
+     * Returns raw top-left and top-right corners
+     *
+     * @return list of corners: index 0 - top left, index 1 - top right
+     */
+    public static List<double[]> extractTopCornersFromBoundingBoxes(double[] xCorners, double[] yCorners) {
+        List<Translation2d> corners = new ArrayList<>();
+        for (int i = 0; i < xCorners.length; i++) {
+            corners.add(new Translation2d(xCorners[i], yCorners[i]));
+        }
+
+        corners.sort(xSort);
+
+        if (corners.size() > 4) {
+            for (int i = 0; i < corners.size() - 4; i++) {
+                corners.remove(1 + i);
+            }
+        }
+
+        List<Translation2d> left = corners.subList(0, 2);
+        List<Translation2d> right = corners.subList(2, 4);
+
+        left.sort(ySort);
+        right.sort(ySort);
+
+        List<Translation2d> leftTop = left.subList(0, 2);
+        List<Translation2d> rightTop = right.subList(0, 2);
+
+        leftTop.sort(xSort);
+        rightTop.sort(xSort);
+
+        Translation2d leftCorner = leftTop.get(0);
+        Translation2d rightCorner = rightTop.get(1);
+
+        return List.of(new double[] { leftCorner.x(), leftCorner.y() },
+                new double[] { rightCorner.x(), rightCorner.y() });
+    }
+
+    public double getLatency() {
+        return mPeriodicIO.latency;
     }
 }

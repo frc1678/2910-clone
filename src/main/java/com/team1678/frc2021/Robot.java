@@ -43,6 +43,7 @@ public class Robot extends TimedRobot {
   private final Indexer mIndexer = Indexer.getInstance();
   private final Shooter mShooter = Shooter.getInstance();
   private final Hood mHood = Hood.getInstance();
+  private final Limelight mLimelight = Limelight.getInstance();
 
   // superstructure
   private final Superstructure mSuperstructure = Superstructure.getInstance();
@@ -72,7 +73,8 @@ public class Robot extends TimedRobot {
         mIntake,
         mIndexer,
         mShooter,
-        mHood
+        mHood,
+        mLimelight
       );
 
       mSubsystemManager.registerEnabledLoops(mEnabledLooper);
@@ -97,7 +99,7 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the 3's periodic
     // block in order for anything in the Command-based framework to work.
-    CommandScheduler.getInstance().run();
+    // CommandScheduler.getInstance().run();
 
     mSubsystemManager.outputToSmartDashboard();
     mEnabledLooper.outputToSmartDashboard();
@@ -109,6 +111,10 @@ public class Robot extends TimedRobot {
   public void disabledInit() {
     try {
       CrashTracker.logDisabledInit();
+
+      mLimelight.setLed(Limelight.LedMode.ON);
+      mLimelight.triggerOutputs();
+
       mEnabledLooper.stop();
 
       mInfrastructure.setIsDuringAuto(true);
@@ -136,6 +142,8 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.schedule();
     }
 
+    mLimelight.setLed(Limelight.LedMode.ON);
+
     SmartDashboard.putString("Match Cycle", "AUTONOMOUS");
 
     try {
@@ -149,6 +157,7 @@ public class Robot extends TimedRobot {
 
       mEnabledLooper.start();
 
+      mLimelight.setPipeline(Constants.kPortPipeline);
     } catch (Throwable t) {
         CrashTracker.logThrowableCrash(t);
         throw t;
@@ -157,7 +166,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    mLimelight.setLed(Limelight.LedMode.ON);
+  }
 
   @Override
   public void teleopInit() {
@@ -177,6 +188,9 @@ public class Robot extends TimedRobot {
 
       mEnabledLooper.start();
       mHood.setNeutralMode(NeutralMode.Brake);
+
+      mLimelight.setLed(Limelight.LedMode.ON);
+      mLimelight.setPipeline(Constants.kPortPipeline);
       
     } catch (Throwable t) {
         CrashTracker.logThrowableCrash(t);
@@ -225,7 +239,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
-    CommandScheduler.getInstance().cancelAll();
+    // CommandScheduler.getInstance().cancelAll();
 
     SmartDashboard.putString("Match Cycle", "TEST");
 
