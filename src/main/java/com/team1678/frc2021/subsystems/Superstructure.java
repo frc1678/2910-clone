@@ -34,6 +34,7 @@ public class Superstructure extends Subsystem {
     private final Indexer mIndexer = Indexer.getInstance();
     private final Shooter mShooter = Shooter.getInstance();
     private final Hood mHood = Hood.getInstance();
+    private final Limelight mLimelight = Limelight.getInstance();
     private final ControlBoard mControlBoard = ControlBoard.getInstance();
     
     // private final Swerve mSwerve = new Swerve();
@@ -104,6 +105,7 @@ public class Superstructure extends Subsystem {
             public void onLoop(double timestamp) {
                 synchronized (Superstructure.this) {
                     maybeUpdateGoalFromHoodScan(timestamp);
+                    maybeUpdateGoalFromVision(timestamp);
                     setSetpoints();
                 }
             }
@@ -117,15 +119,13 @@ public class Superstructure extends Subsystem {
 
     /* UPDATE SHOOTER AND HOOD GOAL WHEN VISION AIMING */
     public synchronized void maybeUpdateGoalFromVision(double timestamp) {
-        /*
-        if (mVisionTracker.hasTarget()) {
-            OptionalDouble distance_to_target = mVisionTracker.getDistanceToTarget();
+        if (mLimelight.seesTarget()) {
+            OptionalDouble distance_to_target = mLimelight.getTargetDistance();
             if (distance_to_target.isPresent()) {
                 mHoodSetpoint = getHoodSetpointFromRegression(distance_to_target.getAsDouble());
                 mShooterSetpoint = getShooterSetpointFromRegression(distance_to_target.getAsDouble());
             }
         }
-        */
 
     }
 
@@ -160,10 +160,10 @@ public class Superstructure extends Subsystem {
         } else if (mWantsPrep) {
             real_indexer = Indexer.WantedAction.NONE;
             real_hood = mHoodSetpoint;
-            real_shooter = 500/*mShooterSetpoint*/;
+            real_shooter = mShooterSetpoint;
         } else if (mWantsShoot) {
             real_hood = mHoodSetpoint;
-            real_shooter = 500/*mShooterSetpoint*/;
+            real_shooter = mShooterSetpoint;
             real_indexer = Indexer.WantedAction.FEED;
         } else if (mWantsSpit) {
             real_hood = Constants.kHoodMinLimit;
@@ -186,7 +186,7 @@ public class Superstructure extends Subsystem {
             }
             real_hood = mHoodSetpoint;
 
-            real_shooter = 0.0;
+            real_shooter = 0;
         }
 
         // clamp the hood goal between min and max hard stops for hood angle
@@ -199,7 +199,7 @@ public class Superstructure extends Subsystem {
         if (Math.abs(real_shooter) < Util.kEpsilon) {
             mShooter.setOpenLoop(0); // open loop if rpm goal is 0, to smooth spin down and stop belt skipping
         } else {
-            mShooter.setVelocity(real_shooter);
+            mShooter.setVelocity(mShooterSetpoint);
         }
 
         /* SET INDEXER STATE */
