@@ -46,7 +46,7 @@ public class GamepadButtonControlBoard {
         return (jog - kDeadband * Math.signum(jog));
     }
 
-    public boolean getWantHoodScan() {
+    public boolean getWantHoodAdjustmentReset() {
         return mController.getButton(CustomXboxController.Button.L_JOYSTICK);
     }
 

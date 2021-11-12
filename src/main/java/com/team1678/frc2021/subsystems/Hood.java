@@ -184,10 +184,6 @@ public class Hood extends Subsystem {
         return getTicksToHoodDegrees(mPeriodicIO.motor_position);
     }
 
-    public void setHoodTargetAngle(double setpoint_angle) {
-        mPeriodicIO.setpoint = setpoint_angle;
-    }
-
     protected double unitsPerSecondToTicksPer100ms(double units_per_second) {
         return getHoodDegreesToTicks(units_per_second) / 10.0;
     }

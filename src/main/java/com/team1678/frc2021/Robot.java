@@ -206,7 +206,7 @@ public class Robot extends TimedRobot {
       double timestamp = Timer.getFPGATimestamp();
 
       /* Check for hood scan */
-      mSuperstructure.setWantHoodScan(mControlBoard.getWantHoodScan());
+      mSuperstructure.setWantHoodAdjustmentReset(mControlBoard.getWantHoodAdjustmentReset());
       
       /* Use control board to set superstructure and subsystem functionality */
       if (mControlBoard.getTuck()) {

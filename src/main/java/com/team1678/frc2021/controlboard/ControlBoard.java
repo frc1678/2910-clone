@@ -43,8 +43,8 @@ public class ControlBoard {
         return mButtonControlBoard.getJogHood();
     }
 
-    public boolean getWantHoodScan() {
-        return mButtonControlBoard.getWantHoodScan();
+    public boolean getWantHoodAdjustmentReset() {
+        return mButtonControlBoard.getWantHoodAdjustmentReset();
     }
 
     public boolean getWantResetShooter() {
