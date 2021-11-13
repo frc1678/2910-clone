@@ -18,7 +18,7 @@ import com.team2910.lib.math.Vector2;
 import java.util.function.DoubleSupplier;
 
 public class VisionRotateToTargetCommand extends CommandBase {
-    private static final PidConstants PID_CONSTANTS = new PidConstants(15.0, 0.0, 1.0);
+    private static final PidConstants PID_CONSTANTS = new PidConstants(20.0, 0.0, 1.0);
 
     private final Swerve drivetrain;
     private final Limelight limelight;

@@ -101,10 +101,7 @@ public class Constants {
 	public static final double kShooterOverheadI = 0.0;
 	public static final double kShooterOverheadD = 0.0;
 	public static final double kShooterOverheadF = 0.053;
-
-	public static final double kShooterFlywheel_ff_v = 0.0; // TODO: Test to find real value
-	public static final double kShooterOverhead_ff_v = 0.0; // TODO: Test to find real value
-
+	
 	// hood
 	public static final int kHoodID = 6;
 	public static final int kHoodAbsoluteEncoderID = 3;
@@ -313,7 +310,7 @@ public class Constants {
 	public static final List<Double> purple = Arrays.asList(255.0, 0.0, 255.0);
 
 	//LED Arrays
-	public static final List<List<Double>> rainbow = Arrays.asList(red, orange, yellow, green, blue, pink, purple);
+public static final List<List<Double>> rainbow = Arrays.asList(red, orange, yellow, green, blue, pink, purple);
 
 	public static final int kLongCANTimeoutMs = 100;
 	public static final int kCANTimeoutMs = 10;

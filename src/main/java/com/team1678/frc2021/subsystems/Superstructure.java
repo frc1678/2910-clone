@@ -41,8 +41,9 @@ public class Superstructure extends Subsystem {
     // private final Vision mVisionTracker = new Vision(mSwerve);
     
     /* Setpoint variables */
-    private double mHoodSetpoint = 50.0;
+    private double mHoodSetpoint = 65.0;
     private double mShooterSetpoint = 0.0;
+    private double mHoodAngleAdjustment = 0.0;
 
     // Superstructure constants
     private final double kSpitVelocity = 200;
@@ -53,6 +54,7 @@ public class Superstructure extends Subsystem {
     private boolean mWantsPrep = false;
     private boolean mWantsShoot = false;
     private boolean mWantsSpit = false;
+    private boolean mResetHoodAngleAdjustment = false;
 
     // Status variables for functions
     private boolean mIsSpunUp = false;
@@ -77,6 +79,10 @@ public class Superstructure extends Subsystem {
             }
         }
         mWantsScan = scan;
+    }
+
+    public synchronized void setWantHoodAdjustmentReset(boolean reset) {
+        mResetHoodAngleAdjustment = reset;
     }
 
     public synchronized void setWantPrep() {
@@ -104,8 +110,8 @@ public class Superstructure extends Subsystem {
             @Override
             public void onLoop(double timestamp) {
                 synchronized (Superstructure.this) {
-                    maybeUpdateGoalFromHoodScan(timestamp);
-                    maybeUpdateGoalFromVision(timestamp);
+                    // maybeUpdateGoalFromHoodScan(timestamp);
+                    // maybeUpdateGoalFromVision(timestamp);
                     setSetpoints();
                 }
             }
@@ -122,11 +128,10 @@ public class Superstructure extends Subsystem {
         if (mLimelight.seesTarget()) {
             OptionalDouble distance_to_target = mLimelight.getTargetDistance();
             if (distance_to_target.isPresent()) {
-                mHoodSetpoint = getHoodSetpointFromRegression(distance_to_target.getAsDouble());
+                mHoodSetpoint = getHoodSetpointFromRegression(distance_to_target.getAsDouble()) + mHoodAngleAdjustment;
                 mShooterSetpoint = getShooterSetpointFromRegression(distance_to_target.getAsDouble());
             }
         }
-
     }
 
     /* UPDATE HOOD GOAL FOR SCANNING TARGET */
@@ -151,7 +156,24 @@ public class Superstructure extends Subsystem {
         /* Real shooter velocity setpoint to be set */
         double real_shooter;
         // status variable tracker for whether shooter is spun up
-        mIsSpunUp = mShooter.spunUp(); 
+        mIsSpunUp = mShooter.spunUp();
+
+        /* control for adding manual hood adjustment */
+        switch(mControlBoard.getManualHoodSet()) {
+            case 1:
+                mHoodAngleAdjustment += 1;
+                break;
+            case -1:
+                mHoodAngleAdjustment += -1;
+                break;
+            case 0:
+                mHoodAngleAdjustment += 0;
+                break;
+        }
+        if (mResetHoodAngleAdjustment) {
+            mHoodAngleAdjustment = 0.0;
+            mResetHoodAngleAdjustment = false;
+        }
 
         if (mWantsTuck) {
             real_indexer = Indexer.WantedAction.NONE;
@@ -159,10 +181,12 @@ public class Superstructure extends Subsystem {
             real_shooter = 0.0;
         } else if (mWantsPrep) {
             real_indexer = Indexer.WantedAction.NONE;
-            real_hood = mHoodSetpoint;
+            real_hood = mHoodSetpoint + mHoodAngleAdjustment;
+            mShooterSetpoint = 500;
             real_shooter = mShooterSetpoint;
         } else if (mWantsShoot) {
-            real_hood = mHoodSetpoint;
+            real_hood = mHoodSetpoint + mHoodAngleAdjustment;
+            mShooterSetpoint = 500;
             real_shooter = mShooterSetpoint;
             real_indexer = Indexer.WantedAction.FEED;
         } else if (mWantsSpit) {
@@ -171,20 +195,8 @@ public class Superstructure extends Subsystem {
             real_indexer = Indexer.WantedAction.FEED;
         } else {
             real_indexer = Indexer.WantedAction.NONE;
-            
-            // read inputs for manual hood setting
-            switch(mControlBoard.getManualHoodSet()){
-                case 1:
-                    mHoodSetpoint += 1;
-                    break;
-                case -1:
-                    mHoodSetpoint += -1;
-                    break;
-                case 0:
-                    mHoodSetpoint += 0;;
-                    break;
-            }
-            real_hood = mHoodSetpoint;
+
+            real_hood = mHoodSetpoint + mHoodAngleAdjustment;
 
             real_shooter = 0;
         }
