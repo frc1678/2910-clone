@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.team1678.lib.util.SwerveModuleConstants;
@@ -68,6 +69,11 @@ public class SwerveModule {
         mAngleMotor.setSelectedSensorPosition(absolutePosition);
     }
 
+    public void resetAngleModule(){
+        double absolutePosition = Conversions.degreesToFalcon(getCanCoder().getDegrees() - angleOffset, Constants.Swerve.angleGearRatio);
+        mAngleMotor.setSelectedSensorPosition(absolutePosition);
+    }
+
     private void configAngleEncoder(){        
         angleEncoder.configFactoryDefault();
         angleEncoder.configAllSettings(Robot.ctreConfigs.swerveCanCoderConfig);
@@ -92,6 +98,10 @@ public class SwerveModule {
         mAngleMotor.configAllSettings(Robot.ctreConfigs.swerveAngleFXConfig);
         mAngleMotor.setInverted(Constants.Swerve.angleMotorInvert);
         mAngleMotor.setNeutralMode(Constants.Swerve.angleNeutralMode);
+        
+        SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 15, 40, 0.02);
+        mAngleMotor.configSupplyCurrentLimit(curr_lim);
+        
         resetToAbsolute();
     }
 
