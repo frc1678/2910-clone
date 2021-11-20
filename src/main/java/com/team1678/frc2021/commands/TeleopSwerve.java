@@ -1,7 +1,6 @@
 package com.team1678.frc2021.commands;
 
 import com.team1678.frc2021.Constants;
-import com.team1678.frc2021.SwerveTools;
 import com.team1678.frc2021.subsystems.Swerve;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
@@ -36,6 +35,46 @@ public class TeleopSwerve extends CommandBase {
         this.openLoop = openLoop;
     }
 
+    private double applyRotationalDeadband(double input){
+        double deadband = Constants.stickDeadband;
+        if (Math.abs(input) < deadband) {
+            return 0.0;
+        } else {
+            return (input - (Math.signum(input) * deadband)) / (1 - deadband);
+        }
+    }
+
+    private Translation2d applyTranslationalDeadband(Translation2d input) {
+        double deadband = Constants.stickDeadband;
+        if (input.getNorm() < deadband) {
+            return new Translation2d();
+        } else {
+            Rotation2d deadband_direction = new Rotation2d(input.getX(), input.getY());
+            Translation2d deadband_vector = new Translation2d(Constants.stickDeadband, deadband_direction);
+
+            double scaled_x = input.getX() - input.getX() * deadband_vector.getX() / (1 - deadband_vector.getX());
+            double scaled_y = input.getY() - input.getY() * deadband_vector.getY() / (1 - deadband_vector.getY());
+            return new Translation2d(scaled_x, scaled_y);
+        }
+
+    }
+
+    public double[] getAxes() {
+        double yAxis = -controller.getRawAxis(translationAxis);
+        double xAxis = -controller.getRawAxis(strafeAxis);
+        double rAxis = -controller.getRawAxis(rotationAxis);
+
+    Translation2d tAxes;
+        
+        /* Deadbands */
+        tAxes = applyTranslationalDeadband(new Translation2d(yAxis, xAxis));
+        rAxis = applyRotationalDeadband(rAxis);
+
+        double[] axes = {tAxes.getX(), tAxes.getY(), rAxis};
+
+        return axes;
+    }
+
     @Override
     public void execute() {
 
@@ -51,8 +90,8 @@ public class TeleopSwerve extends CommandBase {
         rAxis = Constants.Swerve.invertRAxis ? controller.getRawAxis(rotationAxis) : controller.getRawAxis(rotationAxis);
 
         /* Deadbands */
-        tAxes = SwerveTools.applyTranslationalDeadband(new Translation2d(yAxis, xAxis));
-        rAxis = SwerveTools.applyRotationalDeadband(rAxis);
+        tAxes = applyTranslationalDeadband(new Translation2d(yAxis, xAxis));
+        rAxis = applyRotationalDeadband(rAxis);
 
         translation = new Translation2d(tAxes.getX(), tAxes.getY()).times(Constants.Swerve.maxSpeed);
         rotation = rAxis * Constants.Swerve.maxAngularVelocity;
@@ -60,7 +99,7 @@ public class TeleopSwerve extends CommandBase {
     }
 
     public Translation2d getChassisTranslation() {
-        double[] axes = SwerveTools.getAxes(controller, translationAxis, strafeAxis, rotationAxis);
+        double[] axes = getAxes();
 
         double yAxis = axes[0];
         double xAxis = axes[1];
@@ -71,7 +110,7 @@ public class TeleopSwerve extends CommandBase {
     }
 
     public double getChassisRotation() {
-        double[] axes = SwerveTools.getAxes(controller, translationAxis, strafeAxis, rotationAxis);
+        double[] axes = getAxes();
 
         double rAxis = axes[2];
         
