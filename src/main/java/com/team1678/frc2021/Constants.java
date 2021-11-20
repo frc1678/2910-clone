@@ -39,7 +39,7 @@ public class Constants {
 	// Control Board
 	public static final double kJoystickThreshold = 0.2;
 	public static final int kButtonGamepadPort = 1;
-	
+
 	//Physical Robot Dimensions (including bumpers)
 	public static final double kRobotWidth = 24;
 	public static final double kRobotLength = 24;
@@ -404,7 +404,7 @@ public static final List<List<Double>> rainbow = Arrays.asList(red, orange, yell
             public static final int driveMotorID = 13;
             public static final int angleMotorID = 10;
             public static final int canCoderID = 20;
-            public static final double angleOffset = 236;
+            public static final double angleOffset = 237;
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -424,7 +424,7 @@ public static final List<List<Double>> rainbow = Arrays.asList(red, orange, yell
             public static final int driveMotorID = 14;
             public static final int angleMotorID = 9;
             public static final int canCoderID = 21;
-            public static final double angleOffset = 90;
+            public static final double angleOffset = 91;
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
