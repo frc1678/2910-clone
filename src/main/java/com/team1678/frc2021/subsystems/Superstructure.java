@@ -41,7 +41,7 @@ public class Superstructure extends Subsystem {
     // private final Vision mVisionTracker = new Vision(mSwerve);
     
     /* Setpoint variables */
-    private double mHoodSetpoint = 65.0;
+    private double mHoodSetpoint = 50.0;
     private double mShooterSetpoint = 0.0;
     private double mHoodAngleAdjustment = 0.0;
 
@@ -93,6 +93,10 @@ public class Superstructure extends Subsystem {
     public synchronized void setWantShoot() {
         mWantsPrep = false;
         mWantsShoot = !mWantsShoot;
+    }
+
+    public synchronized void setWantShoot(boolean shoot) {
+        mWantsShoot = shoot;
     }
 
     public synchronized void setWantTestSpit() {
