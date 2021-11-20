@@ -157,6 +157,12 @@ public class Swerve extends SubsystemBase {
         gyro.getPigeonIMU().setYaw(0);
     }
 
+    public void resetAngleToAbsolute() {
+        for (SwerveModule mod : mSwerveMods) {
+            mod.resetAngleModule();
+        }
+    }
+
     public Rotation2d getYaw() {
         double[] ypr = new double[3];
         gyro.getPigeonIMU().getYawPitchRoll(ypr);

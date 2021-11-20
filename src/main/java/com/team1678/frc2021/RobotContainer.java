@@ -94,5 +94,9 @@ public class RobotContainer {
   public Swerve getDrivetrainSubsystem() {
     return Swerve.getInstance();
   }
+
+  public void resetAngleToAbsolute() {
+    s_Swerve.resetAngleToAbsolute();
+  }
   
 }
