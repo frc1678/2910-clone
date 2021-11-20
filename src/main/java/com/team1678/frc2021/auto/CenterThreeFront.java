@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class CenterThreeFront extends SequentialCommandGroup{
 
@@ -59,8 +60,9 @@ public class CenterThreeFront extends SequentialCommandGroup{
 
         addCommands(
             new InstantCommand(() -> s_Swerve.resetOdometry(new Pose2d(2.9, 5.84, Rotation2d.fromDegrees(0.0)))),
-            vision,
+            // vision,
             shoot,
+            new WaitCommand(1.5),
             moveFrontCommand
         );
 

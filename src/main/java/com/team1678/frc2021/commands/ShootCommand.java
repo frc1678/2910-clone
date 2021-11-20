@@ -18,8 +18,18 @@ public class ShootCommand extends CommandBase{
     }
 
     @Override
+    public void initialize() {
+        mSuperstructure.setWantShoot(true);
+    }
+
+    @Override
     public void execute() {
-        mSuperstructure.setWantShoot();
+        mSuperstructure.setWantShoot(true);
+    }
+
+    @Override
+    public boolean isFinished() {
+        return true;
     }
 
 
